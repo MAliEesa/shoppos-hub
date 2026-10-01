@@ -32,7 +32,7 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: 320, maxWidth: '90vw', padding: 24, background: '#1a1a1a', borderRadius: 12, textAlign: 'center' }}>
+    <form onSubmit={handleSubmit} style={{ width: 320, maxWidth: '90vw', padding: 24, background: '#1a1a1a', borderRadius: 12 }}>
       <h1 style={{ color: '#fff', marginBottom: 16, fontSize: 20 }}>Shop POS Hub</h1>
       <input
         type="password"
@@ -40,7 +40,7 @@ function LoginForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
-        style={{ width: '100%', padding: 10, marginBottom: 14, borderRadius: 6, border: '1px solid #333', background: '#111', color: '#fff', textAlign: 'center' }}
+style={{ width: '100%', padding: 10, marginBottom: 14, borderRadius: 6, border: '1px solid #333', background: '#111', color: '#fff' }}
       />
       {error && <p style={{ color: '#f66', marginBottom: 10, fontSize: 13 }}>{error}</p>}
       <button type="submit" disabled={loading} style={{ width: '100%', padding: 10, borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontWeight: 600 }}>
