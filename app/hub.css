@@ -114,6 +114,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--glow) 0%, var(--bg) 70%);
 }
 .hub-topbar {
   display: flex;
@@ -157,7 +158,6 @@
   justify-content: center;
   gap: 48px;
   padding: 24px;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--glow) 0%, var(--bg) 70%);
 }
 .hub-hero-title {
   text-align: center;
