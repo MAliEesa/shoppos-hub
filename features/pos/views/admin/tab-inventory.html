@@ -1,0 +1,25 @@
+                <!-- INVENTORY -->
+                <div class="section-tab" id="tab-inventory">
+                  <div class="inventory-panel">
+                    <div class="inv-toolbar">
+                      <input class="inv-search" type="text" placeholder="Search products..." oninput="filterInventory(this.value)">
+                      <span style="font-size:.8rem;color:var(--text3)" id="inv-count"></span>
+                    </div>
+                    <div class="inv-table-wrap">
+                      <table class="inv-table">
+                        <thead>
+                          <tr>
+                            <th>Ref.</th>
+                            <th>Name</th>
+                            <th>Barcode</th>
+                            <th>Category</th>
+                            <th>Buy Price</th>
+                            <th>Sell Price</th>
+                            <th>Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody id="inv-tbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>

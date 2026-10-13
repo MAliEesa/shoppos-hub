@@ -1,0 +1,68 @@
+                <!-- PRODUCTS -->
+                <div class="section-tab" id="tab-products">
+                  <div class="products-layout" onclick="event.target===this&&(document.querySelector('.products-list-panel').classList.remove('open'))">
+                    <div id="prod-list-overlay" onclick="document.querySelector('.products-list-panel').classList.remove('open');this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:399;background:#000a;cursor:pointer"></div>
+                    <div class="products-list-panel">
+                      <div class="panel-header">
+                        <span>Products</span>
+                        <button class="btn btn-primary" style="padding:4px 10px;font-size:.75rem" onclick="newProduct()">+ New</button>
+                      </div>
+                      <div class="product-list-items" id="product-list-items"></div>
+                    </div>
+                    <div class="product-form-panel">
+                      <div class="form-title" style="display:flex;align-items:center;justify-content:space-between">
+                        <span id="form-mode-label">New Product</span>
+                        <button onclick="toggleProductsList()" style="display:none" id="prod-list-toggle" class="btn btn-ghost" style="padding:4px 10px;font-size:.75rem">☰ Products</button>
+                      </div>
+                      <div class="form-grid">
+                        <div class="form-group">
+                          <label class="form-label">Reference *</label>
+                          <input class="form-input" type="text" id="f-ref" placeholder="e.g. 1001">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Barcode *</label>
+                          <input class="form-input" type="text" id="f-barcode" placeholder="Auto-fills from Reference">
+                        </div>
+                        <div class="form-group full">
+                          <label class="form-label">Product Name *</label>
+                          <input class="form-input" type="text" id="f-name" placeholder="e.g. Lays Classic Chips">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Category *</label>
+                          <select class="form-input" id="f-category"></select>
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Stock Quantity *</label>
+                          <input class="form-input" type="number" id="f-stock" placeholder="0" min="0">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Sell Price (Rs.) *</label>
+                          <input class="form-input" type="number" id="f-sellprice" placeholder="0.00" step="0.01">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Buy Price (Rs.)</label>
+                          <input class="form-input" type="number" id="f-buyprice" placeholder="0.00" step="0.01">
+                        </div>
+                        <div class="form-group">
+                          <label class="form-label">Supplier (optional)</label>
+                          <input class="form-input" type="text" id="f-supplier" placeholder="Supplier name">
+                        </div>
+                        <div class="form-group full">
+                          <label class="form-label">Product Photo (optional)</label>
+                          <div class="img-upload-area" onclick="document.getElementById('f-photo-input').click()">
+                            <img class="img-preview" id="f-photo-preview">
+                            <span class="upload-icon" id="upload-icon">📷</span>
+                            <p id="upload-text">Click to upload photo</p>
+                          </div>
+                          <input type="file" id="f-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
+                        </div>
+                      </div>
+                      <div class="form-actions">
+                        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+                        <button class="btn btn-danger" id="delete-product-btn" style="display:none" onclick="deleteProduct()">🗑 Delete</button>
+                        <button class="btn btn-ghost" id="custom-trigger-btn" onclick="toggleCustomTrigger()" title="Mark as custom trigger barcode">✏️ Custom</button>
+                        <button class="btn btn-primary" onclick="saveProduct()">💾 Save Product</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>

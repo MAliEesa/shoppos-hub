@@ -1,0 +1,37 @@
+                <!-- DASHBOARD -->
+                <div class="section-tab active" id="tab-dashboard">
+                  <div class="dashboard-panel">
+                    <div class="dash-grid">
+                      <div class="dash-card accent-blue">
+                        <div class="dash-card-label">Total Sales</div>
+                        <div class="dash-card-value" id="dash-total-products">0</div>
+                        <div class="dash-card-sub">In selected period</div>
+                      </div>
+                      <div class="dash-card accent-green">
+                        <div class="dash-card-label">Today's Sales</div>
+                        <div class="dash-card-value" id="dash-today-sales">Rs. 0</div>
+                        <div class="dash-card-sub" id="dash-today-txn">0 transactions</div>
+                      </div>
+                      <div class="dash-card accent-yellow">
+                        <div class="dash-card-label">Low Stock</div>
+                        <div class="dash-card-value" id="dash-low-stock">0</div>
+                        <div class="dash-card-sub">Items below 5 units</div>
+                      </div>
+                      <div class="dash-card">
+                        <div class="dash-card-label">Categories</div>
+                        <div class="dash-card-value" id="dash-categories">0</div>
+                        <div class="dash-card-sub">Active categories</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div class="dash-section-title" style="margin-bottom:0">Recent Sales</div>
+              <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden">
+                <button onclick="setDashFilter('today',this)" id="df-today" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">Today</button>
+                <button onclick="setDashFilter('all',this)" id="df-all" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">All</button>
+              </div>
+            </div>
+            <div class="recent-sales" id="recent-sales-list">
+                      <div class="recent-sale-row"><span style="color:var(--text3);font-size:.83rem">No sales yet today</span></div>
+                    </div>
+                  </div>
+                </div>

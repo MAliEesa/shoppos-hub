@@ -1,0 +1,166 @@
+                <!-- ANALYTICS / SALES TAB -->
+                <div class="section-tab" id="tab-analytics">
+                  <div style="flex:1;overflow-y:auto;padding:20px;padding-bottom:80px;display:flex;flex-direction:column;gap:24px">
+
+                    <!-- TOP 5 CHART -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;flex-wrap:wrap">
+                        <div style="font-size:.85rem;font-weight:600;color:var(--accent)">📊 Top 5 Products by Sales</div>
+                        <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden;flex-shrink:0">
+                          <button onclick="setChartFilter('today',this)" id="cf-today" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Today</button>
+                          <button onclick="setChartFilter('week',this)" id="cf-week" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Week</button>
+                          <button onclick="setChartFilter('month',this)" id="cf-month" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Month</button>
+                          <button onclick="setChartFilter('all',this)" id="cf-all" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">All</button>
+                        </div>
+                      </div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px" id="chart-filter-label">Ranked by total units sold across all time</div>
+                      <div id="analytics-bar-chart" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
+                    </div>
+
+                    <!-- CLOSE OF DAY -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="font-size:.85rem;font-weight:600;color:var(--accent3);margin-bottom:4px">🔒 Close of Day</div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Records today's total sales and marks the day as closed. Can only be done once per day.</div>
+                      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:10px 18px">
+                          <div style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Today's Sales</div>
+                          <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--accent3)" id="cod-today-total">Rs. 0</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:10px 18px">
+                          <div style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Transactions</div>
+                          <div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--accent)" id="cod-today-txn">0</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="closeOfDay()" id="cod-btn">🔒 Close Day</button>
+                        <span id="cod-status" style="font-size:.82rem;color:var(--text3)"></span>
+                      </div>
+                      <div style="margin-top:16px">
+                        <div style="font-size:.75rem;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Previous Closings</div>
+                        <div id="cod-history" style="display:flex;flex-direction:column;gap:6px"></div>
+                      </div>
+                    </div>
+
+                    <!-- PAYMENT METHOD BREAKDOWN -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;flex-wrap:wrap">
+                        <div style="font-size:.85rem;font-weight:600;color:var(--accent)">💰 Payment Method Breakdown</div>
+                        <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden;flex-shrink:0">
+                          <button onclick="setPmFilter('today',this)" id="pm-today" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">Today</button>
+                          <button onclick="setPmFilter('week',this)" id="pm-week" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Week</button>
+                          <button onclick="setPmFilter('month',this)" id="pm-month" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Month</button>
+                          <button onclick="setPmFilter('all',this)" id="pm-all" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">All</button>
+                        </div>
+                      </div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">How much came in through each payment method</div>
+                      <div class="pm-grid" id="pm-breakdown-grid"></div>
+                    </div>
+
+                    <!-- CHECK A DAY -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="font-size:.85rem;font-weight:600;color:var(--accent2);margin-bottom:4px">📅 Check a Day's Sales</div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Enter a date to see all transactions and products sold that day</div>
+                      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
+                        <div class="form-group" style="width:180px">
+                          <label class="form-label">Date</label>
+                          <input class="form-input" type="date" id="day-check-date">
+                        </div>
+                        <button class="btn btn-primary" onclick="checkDay()">▶ Show</button>
+                      </div>
+                      <div id="day-check-result" style="display:flex;flex-direction:column;gap:8px"></div>
+                    </div>
+
+                    <!-- REVENUE SUMMARY -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="font-size:.85rem;font-weight:600;color:var(--accent);margin-bottom:16px">💰 Revenue Summary</div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 16px">
+                          <div style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Today</div>
+                          <div style="font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--accent2)" id="rev-today">Rs. 0</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 16px">
+                          <div style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">This Week</div>
+                          <div style="font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--accent2)" id="rev-week">Rs. 0</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 16px">
+                          <div style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">This Month</div>
+                          <div style="font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--accent2)" id="rev-month">Rs. 0</div>
+                        </div>
+                        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 16px">
+                          <div style="font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">This Year</div>
+                          <div style="font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--accent2)" id="rev-year">Rs. 0</div>
+                        </div>
+                      </div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <button onclick="revNavigate(-1)" id="rev-nav-prev" style="width:26px;height:26px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">‹</button>
+                          <div style="font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;min-width:160px;text-align:center" id="rev-period-label">2026</div>
+                          <button onclick="revNavigate(1)" id="rev-nav-next" style="width:26px;height:26px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;opacity:0.3">›</button>
+                        </div>
+                        <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden">
+                          <button onclick="setRevFilter('months',this)" id="rf-months" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">Months</button>
+                          <button onclick="setRevFilter('weeks',this)" id="rf-weeks" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Weeks</button>
+                          <button onclick="setRevFilter('days',this)" id="rf-days" style="padding:4px 12px;font-size:.73rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Days</button>
+                        </div>
+                      </div>
+                      <div id="rev-monthly" style="display:flex;flex-direction:column;gap:6px"></div>
+                    </div>
+
+                    <!-- PRODUCT SALES HISTORY -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="font-size:.85rem;font-weight:600;color:var(--accent2);margin-bottom:4px">🔍 Product Sales History</div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Select a product and time range to see its sales</div>
+                      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px">
+                        <div class="form-group" style="flex:1;min-width:180px">
+                          <label class="form-label">Search by Name or Ref</label>
+                          <input class="form-input" type="text" id="an-prod-search" placeholder="e.g. 1001 or Lays..." oninput="anFilterProducts()">
+                        </div>
+                        <div class="form-group" style="flex:1;min-width:180px">
+                          <label class="form-label">Select Product</label>
+                          <select class="form-input" id="an-prod-select"></select>
+                        </div>
+                        <div class="form-group" style="width:140px">
+                          <label class="form-label">Time Range</label>
+                          <select class="form-input" id="an-range">
+                            <option value="day">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="all">All Time</option>
+                          </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="anRun()">▶ Show Sales</button>
+                      </div>
+                      <div id="an-result" style="display:flex;flex-direction:column;gap:8px"></div>
+                    </div>
+
+                    <!-- SHOPPING LIST -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="font-size:.85rem;font-weight:600;color:var(--accent2);margin-bottom:4px">🛒 Next Restock List</div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Items customers asked for — add here so you remember to stock them</div>
+                      <div style="display:flex;gap:10px;margin-bottom:14px">
+                        <input class="form-input" type="text" id="restock-input" placeholder="e.g. Pepsi 1.5L, Colgate..." style="flex:1" onkeydown="if(event.key==='Enter')addRestockItem()">
+                        <button class="btn btn-primary" onclick="addRestockItem()">+ Add</button>
+                      </div>
+                      <div id="restock-list" style="display:flex;flex-direction:column;gap:6px"></div>
+                    </div>
+
+                    <!-- BACKUP -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="font-size:.85rem;font-weight:600;color:var(--accent2);margin-bottom:4px">💾 Backup Data</div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Download a full backup of all products and sales data</div>
+                      <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button class="btn btn-ghost" onclick="downloadBackup('csv')">📄 CSV Backup</button>
+                        <button class="btn btn-ghost" onclick="downloadBackup('json')">📋 JSON Backup</button>
+                        <button class="btn btn-ghost" onclick="downloadBackup('excel')">📊 Excel Backup</button>
+                      </div>
+                    </div>
+
+                    <!-- WIPE SALES -->
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+                      <div>
+                        <div style="font-size:.85rem;font-weight:600;color:var(--danger)">🗑 Wipe All Sales Data</div>
+                        <div style="font-size:.78rem;color:var(--text3);margin-top:3px">Permanently deletes all sales records. Use before going live.</div>
+                      </div>
+                      <button class="btn btn-danger" onclick="wipeAllSales()">🗑 Wipe Sales</button>
+                    </div>
+
+                  </div>
+                </div>

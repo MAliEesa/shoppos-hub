@@ -1,0 +1,28 @@
+            /* ── RECEIPT MODAL ── */
+            .modal-overlay {
+              position:fixed; inset:0; background:#000a; display:none;
+              align-items:center; justify-content:center; z-index:1000;
+            }
+            .modal-overlay.open { display:flex; }
+            .modal {
+              background:var(--bg2); border:1px solid var(--border2); border-radius:14px;
+              padding:28px; min-width:340px; max-width:440px; width:90%;
+              box-shadow: 0 24px 80px #0008;
+            }
+            .modal-title { font-family:var(--mono); font-size:1rem; margin-bottom:20px; color:var(--accent2); }
+            .receipt-content {
+              background:#fff; color:#111; padding:20px; border-radius:var(--radius2);
+              font-family:'Courier New',monospace; font-size:13px; line-height:1.7;
+              margin-bottom:16px;
+            }
+            .receipt-hr { border:none; border-top:1px dashed #999; margin:8px 0; }
+            .receipt-row { display:flex; justify-content:space-between; }
+            .receipt-title { text-align:center; font-weight:bold; font-size:15px; margin-bottom:4px; }
+            .receipt-sub { text-align:center; font-size:11px; color:#555; margin-bottom:8px; }
+            .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+            .pay-option { padding:8px 14px;font-size:.85rem;cursor:pointer;color:var(--text2);transition:.1s; }
+            .pay-option:hover { background:var(--bg4);color:var(--text); }
+            .sh-manual-field { flex:1 1 0; min-width:140px; }
+            .pm-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+            .pm-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius2); padding:14px 16px; text-align:center; }

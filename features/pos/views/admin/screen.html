@@ -1,0 +1,45 @@
+          <!-- ADMIN SCREEN -->
+          <div id="adm-screen" class="screen">
+            <div class="topbar">
+              <button class="topbar-back" onclick="goHome()">←</button>
+              <span class="badge badge-green" id="adm-clock" style="margin-right:auto"></span>
+              <span class="topbar-title" style="flex:0"></span>
+              <div class="topbar-right">
+                <button class="adm-menu-toggle" id="adm-menu-toggle-top" onclick="toggleAdmNav()" style="position:static;width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center">☰</button>
+              </div>
+            </div>
+            <div class="adm-body">
+              <div class="adm-sidebar-overlay" id="adm-overlay" onclick="closeAdmNav()"></div>
+              <button class="adm-menu-toggle" id="adm-menu-toggle" onclick="toggleAdmNav()">☰</button>
+              <div class="adm-sidebar" id="adm-sidebar">
+                <button class="adm-nav-btn active" onclick="admTab('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
+                <button class="adm-nav-btn" onclick="admTab('products',this)"><span class="nav-icon">📦</span>Products</button>
+                <button class="adm-nav-btn" onclick="admTab('inventory',this)"><span class="nav-icon">🗃️</span>Inventory</button>
+                <button class="adm-nav-btn" onclick="admTab('categories',this)"><span class="nav-icon">🏷️</span>Categories</button>
+                <button class="adm-nav-btn" onclick="admTab('barcodes',this)"><span class="nav-icon">⬛</span>Barcodes</button>
+                <button class="adm-nav-btn" onclick="admTab('shophours',this)"><span class="nav-icon">🏪</span>Shop Hours</button>
+                <button class="adm-nav-btn" onclick="admTab('expenses',this)"><span class="nav-icon">💸</span>Expenses</button>
+                <button class="adm-nav-btn" onclick="admTab('analytics',this)"><span class="nav-icon">📈</span>Sales</button>
+              </div><!-- /adm-sidebar -->
+              <div class="adm-content">
+
+                <!-- @include views/admin/tab-dashboard.html -->
+
+                <!-- @include views/admin/tab-products.html -->
+
+                <!-- @include views/admin/tab-inventory.html -->
+
+                <!-- @include views/admin/tab-categories.html -->
+
+                <!-- @include views/admin/tab-analytics.html -->
+
+                <!-- @include views/admin/tab-barcodes.html -->
+
+
+              <!-- @include views/admin/tab-shophours.html -->
+
+              <!-- @include views/admin/tab-expenses.html -->
+
+              </div>
+            </div>
+          </div>

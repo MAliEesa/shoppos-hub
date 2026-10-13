@@ -1,0 +1,67 @@
+                <!-- BARCODES -->
+                <div class="section-tab" id="tab-barcodes">
+                  <div style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:24px">
+
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                        <div style="font-size:.85rem;font-weight:600;color:var(--accent)">⬛ Single Product Print</div>
+                        <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden">
+                          <button id="mode-col-single" onclick="setPrintMode('columns')" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">Columns</button>
+                          <button id="mode-row-single" onclick="setPrintMode('rows')" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Rows</button>
+                        </div>
+                      </div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Select one product — prints barcode labels equal to its current stock count</div>
+                      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+                        <div class="form-group" style="flex:1;min-width:180px">
+                          <label class="form-label">Select Product</label>
+                          <select class="form-input" id="bc-single-select" onchange="bcSingleLoad()"></select>
+                        </div>
+                        <div class="form-group" style="width:120px">
+                          <label class="form-label">Qty to Print</label>
+                          <input class="form-input" type="number" id="bc-single-qty" min="1" placeholder="0">
+                        </div>
+                        <div class="form-group" style="width:160px">
+                          <label class="form-label">Barcode</label>
+                          <input class="form-input" type="text" id="bc-single-barcode" readonly>
+                        </div>
+                        <button class="btn btn-primary" onclick="bcSinglePrint()" style="margin-bottom:1px">⬛ Print Labels</button>
+                      </div>
+                    </div>
+
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                        <div style="font-size:.85rem;font-weight:600;color:var(--accent2)">⬛ Multi Product Print</div>
+                        <div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius2);overflow:hidden">
+                          <button id="mode-col-multi" onclick="setPrintMode('columns')" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:var(--accent);color:#fff;border:none;cursor:pointer">Columns</button>
+                          <button id="mode-row-multi" onclick="setPrintMode('rows')" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:transparent;color:var(--text2);border:none;cursor:pointer">Rows</button>
+                        </div>
+                      </div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:16px">Select multiple products — each prints its own stock count of labels, all in one print job</div>
+                      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap">
+                        <div class="form-group" style="flex:1;min-width:200px">
+                          <label class="form-label">Add Product to Queue</label>
+                          <select class="form-input" id="bc-multi-select"></select>
+                        </div>
+                        <button class="btn btn-ghost" onclick="bcMultiAdd()">+ Add to Queue</button>
+                      </div>
+                      <div id="bc-multi-queue" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+                      <div style="display:flex;gap:10px;align-items:center">
+                        <button class="btn btn-danger" onclick="bcMultiClear()">Clear Queue</button>
+                        <button class="btn btn-success" onclick="bcMultiPrint()">⬛ Print All</button>
+                      </div>
+
+                    </div>
+
+                    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                        <div style="font-size:.85rem;font-weight:600;color:var(--accent3)">🕓 Print History</div>
+                        <button class="btn btn-ghost" style="padding:4px 10px;font-size:.75rem" onclick="clearPrintHistory()">Clear</button>
+                      </div>
+                      <div style="font-size:.78rem;color:var(--text3);margin-bottom:12px">Session history — resets when page is refreshed</div>
+                      <div id="bc-history" style="display:flex;flex-direction:column;gap:8px">
+                        <div style="color:var(--text3);font-size:.82rem">No prints yet this session</div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>

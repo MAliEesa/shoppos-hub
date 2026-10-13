@@ -1,0 +1,20 @@
+            /* ══════════════════════════════════════
+              ADMIN SCREEN
+            ══════════════════════════════════════ */
+            #adm-screen { background:var(--bg); }
+            .adm-body { display:flex; flex:1; overflow:hidden; }
+
+            /* Sidebar */
+            .adm-sidebar {
+              width:200px; background:var(--bg2); border-right:1px solid var(--border);
+              padding:12px 8px; display:flex; flex-direction:column; gap:4px; flex-shrink:0;
+            }
+            .adm-nav-btn {
+              padding:10px 12px; border-radius:var(--radius2); border:none; background:transparent;
+              color:var(--text2); cursor:pointer; font-size:.85rem; font-weight:500; text-align:left;
+              transition:.15s; display:flex; align-items:center; gap:10px;
+            }
+            .adm-nav-btn:hover { background:var(--bg3); color:var(--text); }
+            .adm-nav-btn.active { background:var(--bg4); color:var(--accent); border-left:2px solid var(--accent); }
+            .adm-nav-btn .nav-icon { font-size:1rem; }
+            .adm-content { flex:1; overflow:hidden; display:flex; flex-direction:column; }

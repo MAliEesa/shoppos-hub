@@ -1,0 +1,19 @@
+            /* scrollbar */
+            ::-webkit-scrollbar { width:5px; height:5px; }
+            ::-webkit-scrollbar-track { background:transparent; }
+            ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:10px; }
+
+            /* toast */
+            #toast {
+              position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+              background:var(--bg3); border:1px solid var(--border2); border-radius:var(--radius);
+              padding:10px 20px; font-size:.85rem; transition:.3s; z-index:2000;
+              color:var(--text2); pointer-events:none; white-space:nowrap;
+            }
+            #toast.show { transform:translateX(-50%) translateY(0); }
+
+            .section-tab { display:none; flex:1; flex-direction:column; overflow:hidden; }
+            .section-tab.active { display:flex; }
+
+            .adm-menu-toggle { display:none; }
+            #adm-menu-toggle { display:none; }

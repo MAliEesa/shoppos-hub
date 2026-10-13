@@ -1,0 +1,30 @@
+                <!-- CATEGORIES -->
+                <div class="section-tab" id="tab-categories">
+                  <div class="categories-panel" onclick="event.target===this&&(document.querySelector('.cat-list-panel').classList.remove('open'))">
+                    <div id="cat-list-overlay" onclick="document.querySelector('.cat-list-panel').classList.remove('open');this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:399;background:#000a;cursor:pointer"></div>
+                    <div class="cat-list-panel">
+                      <div class="panel-header">
+                        <span>Categories</span>
+                        <button class="btn btn-primary" style="padding:4px 10px;font-size:.75rem" onclick="showAddCat()">+ Add</button>
+                      </div>
+                      <div class="cat-items" id="adm-cat-items"></div>
+                    </div>
+                    <div class="cat-form-panel">
+                      <div class="form-title" style="display:flex;align-items:center;justify-content:space-between">
+                        <span>Add / Edit Category</span>
+                        <button onclick="toggleCatList()" id="cat-list-toggle" style="display:none" class="btn btn-ghost">☰ Categories</button>
+                      </div>
+                      <div class="form-group" style="margin-bottom:14px">
+                        <label class="form-label">Category Name *</label>
+                        <input class="form-input" type="text" id="cat-name-input" placeholder="e.g. Beverages">
+                      </div>
+                      <div class="form-actions">
+                        <button class="btn btn-primary" onclick="saveCategory()">💾 Save Category</button>
+                      </div>
+                      <div style="margin-top:24px;padding:14px;background:var(--bg2);border-radius:var(--radius2);border:1px solid var(--border)">
+                        <div style="font-size:.78rem;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">To delete a category</div>
+                        <div style="font-size:.83rem;color:var(--text2)">Select it from the list on the left, then click the delete button that appears.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
