@@ -226,29 +226,6 @@
             showToast('Bill cleared');
           }
 
-          async function empCloseOfDay() {
-        const sessionStart = new Date(getSessionStart());
-        const sessionSales = db.sales.filter(s => new Date(s.time) > sessionStart);
-        const sessionTotal = sessionSales.reduce((s, sale) => s + sale.total, 0);
-        if (!confirm(`Close current session?\nTotal: Rs. ${sessionTotal.toFixed(0)}\nTransactions: ${sessionSales.length}`)) return;
-        const closedAt = await getTrueServerTime();
-        const todayKey = localDate(getSessionStart());
-        _sessionStartISO = closedAt;
-        await fbdb.ref('/sessionStart').set(closedAt);
-        await fbdb.ref('/closings/' + todayKey).set({
-          date: todayKey,
-          total: sessionTotal,
-          transactions: sessionSales.length,
-          closedAt: closedAt
-        });
-        showToast(`✓ Session closed — Rs. ${sessionTotal.toFixed(0)}`);
-        updateDashboard();
-        renderCOD();
-        renderRevenueSummary();
-        if (revFilter === 'weeks') renderWeeklyRevenue();
-        else if (revFilter === 'days') renderDailyRevenue();
-      }
-
           // _serverTimeOffset moved to top
 
           function syncServerTime() {

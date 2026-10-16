@@ -90,26 +90,48 @@
               const sales = tcSalesSince(periodStart);
               const opening = tcRound(parseFloat(vals.opening));
               const counted = {}, expected = {}, diff = {};
+              let totalSales = 0, totalCounted = 0;
               TC_SLOTS.forEach(s => {
                 sales[s.key] = tcRound(sales[s.key]);
-                counted[s.key] = tcRound(parseFloat(vals.counted[s.key]));
-                expected[s.key] = s.key === 'cash' ? tcRound(opening + sales.cash) : sales[s.key];
+                // Cash: opening money is taken out first. Other methods are used as typed.
+                counted[s.key] = tcRound(parseFloat(vals.counted[s.key]) - (s.key === 'cash' ? opening : 0));
+                expected[s.key] = sales[s.key];
                 diff[s.key] = tcRound(counted[s.key] - expected[s.key]);
+                totalSales += sales[s.key];
+                totalCounted += counted[s.key];
               });
-              showResult({ opening, sales, expected, counted, diff }, TC_SLOTS.filter(s => diff[s.key] !== 0));
+              totalSales = tcRound(totalSales);
+              totalCounted = tcRound(totalCounted);
+              const totalDiff = tcRound(totalCounted - totalSales);
+              // Cash is NOT checked on its own (it is random) - only the total.
+              // Card / Easypaisa / JazzCash / Bank must each match their own sales.
+              const mismatches = TC_SLOTS.filter(s => s.key !== 'cash' && diff[s.key] !== 0);
+              showResult({ opening, sales, expected, counted, diff, totalSales, totalCounted, totalDiff }, mismatches);
             }
 
             function showResult(r, mismatches) {
-              const banner = mismatches.length === 0
-                ? `<div style="padding:12px 14px;border-radius:var(--radius2);background:#12a97a20;border:1px solid #12a97a60;color:var(--accent2);font-weight:600;margin-bottom:16px">✓ Everything matches the sales saved in the system</div>`
-                : `<div style="padding:12px 14px;border-radius:var(--radius2);background:#ef444420;border:1px solid #ef444440;color:var(--danger);font-weight:600;margin-bottom:16px">⚠ Mismatch found<div style="font-weight:500;font-size:.82rem;margin-top:6px;line-height:1.6">${mismatches.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join('<br>')}</div></div>`;
+              const okAll = mismatches.length === 0 && r.totalDiff === 0;
+              const bad = r.totalDiff < 0 || mismatches.length > 0;
+              const bStyle = okAll ? 'background:#12a97a20;border:1px solid #12a97a60;color:var(--accent2)'
+                : bad ? 'background:#ef444420;border:1px solid #ef444440;color:var(--danger)'
+                : 'background:#f59e0b20;border:1px solid #f59e0b60;color:var(--accent3)';
+              const totalMsg = r.totalDiff === 0 ? '✓ Total matches the sales'
+                : r.totalDiff < 0 ? '⚠ Total is ' + tcMoney(-r.totalDiff) + ' LESS than the sales'
+                : '⚠ Total is ' + tcMoney(r.totalDiff) + ' MORE than the sales';
+              const banner = `<div style="padding:12px 14px;border-radius:var(--radius2);${bStyle};font-weight:600;margin-bottom:16px">${okAll ? '✓ Everything matches the sales saved in the system' : totalMsg}${okAll ? '' : `<div style="font-weight:500;font-size:.82rem;margin-top:6px;line-height:1.6">${mismatches.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join('<br>')}</div>`}</div>`;
               const rows = TC_SLOTS.map(s => `
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;align-items:center">
                   <span>${s.icon} ${s.label}</span>
                   <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.expected[s.key])}</span>
                   <span style="font-family:var(--mono);text-align:right">${tcMoney(r.counted[s.key])}</span>
-                  <span style="text-align:right;font-weight:700;color:${tcDiffColor(r.diff[s.key])}">${tcDiffText(r.diff[s.key])}</span>
-                </div>`).join('');
+                  <span style="text-align:right;font-weight:700;color:${s.key === 'cash' ? 'var(--text3)' : tcDiffColor(r.diff[s.key])}">${s.key === 'cash' ? 'see total' : tcDiffText(r.diff[s.key])}</span>
+                </div>`).join('') + `
+                <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:10px 0;font-size:.85rem;font-weight:700;align-items:center">
+                  <span>Total</span>
+                  <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.totalSales)}</span>
+                  <span style="font-family:var(--mono);text-align:right">${tcMoney(r.totalCounted)}</span>
+                  <span style="text-align:right;color:${tcDiffColor(r.totalDiff)}">${tcDiffText(r.totalDiff)}</span>
+                </div>`;
               overlay.innerHTML = `
                 <div style="${boxStyle}">
                   <div style="font-family:var(--mono);font-size:1rem;color:var(--accent2);margin-bottom:14px">🔒 Closing — Result</div>
@@ -118,7 +140,7 @@
                     <span></span><span style="text-align:right">System says</span><span style="text-align:right">You typed</span><span style="text-align:right">Result</span>
                   </div>
                   ${rows}
-                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash = opening ${tcMoney(r.opening)} + cash sales ${tcMoney(r.sales.cash)}</div>
+                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}. Cash is only checked inside the Total.</div>
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-back">← Back</button>
                     <button class="btn btn-success" id="tc-done">Done</button>

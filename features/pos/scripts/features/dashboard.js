@@ -11,17 +11,6 @@
             if (btn) { btn.style.background = 'var(--accent)'; btn.style.color = '#fff'; }
             updateDashboard();
           }
-          function getLastClosingTime() {
-            // Returns a Date of the last closing, or midnight of today if none
-            const closings = db.sales; // we check Firebase closings separately
-            return fbdb.ref('/closings').orderByKey().limitToLast(1).once('value').then(snap => {
-              const data = snap.val();
-              if (!data) return null;
-              const lastKey = Object.keys(data)[0];
-              const lastClosing = data[lastKey];
-              return new Date(lastClosing.closedAt);
-            });
-          }
 
           function updateDashboard() {
         document.getElementById('dash-categories').textContent = db.categories.length;

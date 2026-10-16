@@ -149,24 +149,6 @@ function bcPopulateSelects() {
             bcAddHistory(items, bcPrintMode);
           }
 
-          function generateBarcodeSVG(code) {
-            // returns an SVG string with a real CODE128 barcode using JsBarcode
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            try {
-              JsBarcode(svg, code, {
-                format: 'CODE128',
-                displayValue: false,
-                margin: 0,
-                width: 2,
-                height: 40,
-                background: '#ffffff'
-              });
-            } catch(e) {
-              // fallback text if barcode invalid
-              return `<text x="10" y="25" font-size="10" fill="red">Invalid</text>`;
-            }
-            return svg.outerHTML;
-          }
 
           async function bcDoPrint(items) {
             try {
