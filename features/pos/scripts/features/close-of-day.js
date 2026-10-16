@@ -64,6 +64,51 @@
             });
           }
 
+          async function editSale(saleId) {
+            const sale = db.sales.find(x => x.id === saleId);
+            if (!sale) { showToast('⚠ Sale not found'); return; }
+            const pwd = await showPasswordPrompt('🔑 Enter Wipe Password to edit this sale:');
+            if (pwd === null) return;
+            const res = await fetch(shopApi('checkwipe'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: pwd })
+            });
+            const data = await res.json();
+            if (!data.ok) { alert('❌ Wrong password!'); return; }
+
+            const methods = ['Cash', 'Card', 'Easypaisa', 'JazzCash', 'Bank Transfer'];
+            const cur = sale.payMethod || 'Cash';
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9999;padding:12px';
+            const fieldStyle = 'width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-family:var(--mono);font-size:.95rem;padding:10px;outline:none;margin-bottom:14px';
+            overlay.innerHTML = `
+              <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:22px;width:100%;max-width:380px;box-shadow:0 24px 80px #0008">
+                <div style="font-family:var(--mono);font-size:1rem;color:var(--accent2);margin-bottom:16px">✏ Edit Sale #${String(saleId).padStart(4,'0')}</div>
+                <div style="font-size:.75rem;color:var(--text3);margin-bottom:4px">Total amount (Rs.)</div>
+                <input type="number" min="0" step="any" inputmode="decimal" id="es-total" value="${sale.total}" style="${fieldStyle}">
+                <div style="font-size:.75rem;color:var(--text3);margin-bottom:4px">Payment method</div>
+                <select id="es-method" style="${fieldStyle}">${methods.map(m => `<option value="${m}"${m === cur ? ' selected' : ''}>${m}</option>`).join('')}</select>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+                  <button class="btn btn-ghost" id="es-cancel">Cancel</button>
+                  <button class="btn btn-primary" id="es-save">Save</button>
+                </div>
+              </div>`;
+            document.body.appendChild(overlay);
+            overlay.querySelector('#es-cancel').onclick = () => overlay.remove();
+            overlay.querySelector('#es-save').onclick = async () => {
+              const total = parseFloat(overlay.querySelector('#es-total').value);
+              const payMethod = overlay.querySelector('#es-method').value;
+              if (!(total >= 0)) { showToast('⚠ Enter a valid total'); return; }
+              await fbdb.ref('/sales/' + saleId).update({ total: total, payMethod: payMethod });
+              sale.total = total;
+              sale.payMethod = payMethod;
+              overlay.remove();
+              showToast('✏ Sale updated');
+              updateDashboard();
+            };
+          }
+
           async function deleteSale(saleId) {
             const pwd = await showPasswordPrompt('🔑 Enter Wipe Password to delete this sale:');
             if (pwd === null) return;

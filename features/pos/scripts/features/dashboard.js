@@ -78,6 +78,7 @@
                         <div class="rs-time">${dayLabel} — ${t}</div>
                         <div class="rs-total">${privacyMode ? 'Rs. ---' : 'Rs. ' + s.total.toFixed(0)}</div>
                       </div>
+                      <button onclick="event.stopPropagation();editSale(${s.id})" style="padding:3px 10px;font-size:.72rem;border-radius:4px;border:1px solid #3b82f640;background:#3b82f620;color:var(--accent);cursor:pointer;font-weight:600;flex-shrink:0">✏</button>
                       <button onclick="event.stopPropagation();deleteSale(${s.id})" style="padding:3px 10px;font-size:.72rem;border-radius:4px;border:1px solid #ef444440;background:#ef444420;color:var(--danger);cursor:pointer;font-weight:600;flex-shrink:0">🗑</button>
                     </div>
                   </div>
