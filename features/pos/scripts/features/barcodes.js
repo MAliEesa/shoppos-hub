@@ -2,7 +2,23 @@
           // BARCODE PRINTING
           // ══════════════════════════════════════
           let bcMultiQueue = [];
-          let bcPrintMode = 'columns';
+let bcPrintMode = 'columns';
+          let bcLabelSystem = parseInt(localStorage.getItem('bcLabelSystem')) || 3;
+
+          function setLabelSystem(n) {
+            bcLabelSystem = n;
+            localStorage.setItem('bcLabelSystem', n);
+            bcRefreshLabelButtons();
+          }
+
+          function bcRefreshLabelButtons() {
+            [1, 2, 3].forEach(k => {
+              const el = document.getElementById('ls-' + k);
+              if (!el) return;
+              el.style.background = bcLabelSystem === k ? 'var(--accent)' : 'transparent';
+              el.style.color = bcLabelSystem === k ? '#fff' : 'var(--text2)';
+            });
+          }
           let bcPrintHistory = [];
 
           function bcLoadHistory() {
@@ -67,7 +83,8 @@
             });
           }
 
-          function bcPopulateSelects() {
+function bcPopulateSelects() {
+            bcRefreshLabelButtons();
             const withStock = db.products.filter(p => parseInt(p.stock||0) > 0 || p.customTrigger)
               .map(p => `<option value="${p.ref}">${p.ref} — ${p.name} ${p.customTrigger ? '(custom trigger)' : '('+p.stock+' in stock)'}</option>`).join('');
             const noStock = db.products.filter(p => parseInt(p.stock||0) <= 0 && !p.customTrigger)
@@ -168,21 +185,39 @@
               const label = (x, bx) => (p) => `^FO${x},10^FB230,1,0,C,0^ADN,18,10^FD${p.ref}^FS^FO${bx},32^BCN,88,N,N,N^FD${p.barcode}^FS^FO${x},128^FB230,1,0,C,0^ADN,18,10^FD${p.customTrigger ? '---' : 'Rs. ' + Math.round(p.sellPrice)}^FS`;
               const c1 = label(5, 30);
               const c2 = label(245, 270);
-              const c3 = label(500, 525);
+const c3 = label(500, 525);
+
+              // 2-label roll tuning (dots, 8 dots = 1mm)
+              const L2 = { leftDx: 4, leftDy: 52, rightDx: 72, rightDy: 52 };
+              const label2 = (x, bx, dy) => (p) => `^FO${x},${10 + dy}^FB230,1,0,C,0^ADN,18,10^FD${p.ref}^FS^FO${bx},${32 + dy}^BCN,88,N,N,N^FD${p.barcode}^FS^FO${x},${128 + dy}^FB230,1,0,C,0^ADN,18,10^FD${p.customTrigger ? '---' : 'Rs. ' + Math.round(p.sellPrice)}^FS`;
+              // 1-label roll tuning: dx = move right, dy = move down
+              const L1 = { dx: 72, dy: 40 };
+              let cols;
+              if (bcLabelSystem === 2) {
+                cols = [label2(5 + L2.leftDx, 30 + L2.leftDx, L2.leftDy), label2(245 + L2.rightDx, 270 + L2.rightDx, L2.rightDy)];
+              } else {
+                cols = bcLabelSystem === 1
+                  ? [label2(5 + L1.dx, 30 + L1.dx, L1.dy)]
+                  : [c1, c2, c3];
+              }
+              const n = cols.length;
+              const pw = n === 3 ? 720 : (n === 2 ? 640 : 320);
+              const ll = n === 3 ? '^LL152' : '';
 
               items.forEach(({ product: p, qty }) => {
-                if (bcPrintMode === 'columns') {
-                  const rows = Math.ceil(qty / 3);
+                if (bcPrintMode === 'columns' && n > 1) {
+                  const rows = Math.ceil(qty / n);
                   for (let i = 0; i < rows; i++) {
-                    const l1 = i * 3 + 1 <= qty ? c1(p) : '';
-                    const l2 = i * 3 + 2 <= qty ? c2(p) : '';
-                    const l3 = i * 3 + 3 <= qty ? c3(p) : '';
-                    allZPL += `^XA^PW720^LL152${l1}${l2}${l3}^XZ`;
+                    let row = '';
+                    for (let c = 0; c < n; c++) {
+                      if (i * n + c + 1 <= qty) row += cols[c](p);
+                    }
+                    allZPL += `^XA^PW${pw}${ll}${row}^XZ`;
                   }
                 } else {
-                  // Rows mode — each qty = 1 full row of 3
+                  // Rows mode (or 1-label roll): each qty = 1 full row
                   for (let i = 0; i < qty; i++) {
-                    allZPL += `^XA^PW720^LL152${c1(p)}${c2(p)}${c3(p)}^XZ`;
+                    allZPL += `^XA^PW${pw}${ll}${cols.map(f => f(p)).join('')}^XZ`;
                   }
                 }
               });
