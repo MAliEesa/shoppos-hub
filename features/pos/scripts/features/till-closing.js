@@ -51,7 +51,7 @@
             if (document.getElementById('tc-overlay')) return;
             const last = await tcGetLast();
             const periodStart = getSessionStart();
-            const prevClosing = last && typeof last.closingMoney === 'number' ? last.closingMoney : null;
+const prevClosing = last && last.counted && typeof last.counted.cash === 'number' ? last.counted.cash : null;
             const vals = { opening: prevClosing != null ? String(prevClosing) : '', closing: '', counted: {} };
 
             const overlay = document.createElement('div');
@@ -76,15 +76,13 @@
 
                   <div style="${secStyle}">Opening money</div>
                   <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Money that was in the box when the shop opened</div>
-                  <input type="number" min="0" step="any" inputmode="decimal" id="tc-opening" value="${vals.opening}" placeholder="0" style="${inputStyle};max-width:220px">
+                  <input type="number" min="0" step="any" inputmode="decimal" id="tc-opening" value="${vals.opening}" placeholder="0" style="${inputStyle}">
 
                   <div style="${secStyle};margin-top:20px">Money collected</div>
-                  <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Cash = the cash you are taking out of the box</div>
+                  <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Cash = all the cash in the box (opening money included)</div>
                   ${methodBoxes}
 
-                  <div style="${secStyle};margin-top:20px">Closing money</div>
-                  <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Money you are leaving in the box (becomes tomorrow's opening)</div>
-                  <input type="number" min="0" step="any" inputmode="decimal" id="tc-closing" value="${vals.closing}" placeholder="0" style="${inputStyle};max-width:220px">
+
 
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-cancel">Cancel</button>
@@ -97,26 +95,24 @@
 
             function onContinue() {
               vals.opening = overlay.querySelector('#tc-opening').value.trim();
-              vals.closing = overlay.querySelector('#tc-closing').value.trim();
               TC_SLOTS.forEach(s => { vals.counted[s.key] = overlay.querySelector(`input[data-k="${s.key}"]`).value.trim(); });
-              const all = [vals.opening, vals.closing].concat(TC_SLOTS.map(s => vals.counted[s.key]));
-              if (all.some(v => v === '' || !(parseFloat(v) >= 0))) { showToast('⚠ Fill all 7 boxes (type 0 if none)'); return; }
+              const all = [vals.opening].concat(TC_SLOTS.map(s => vals.counted[s.key]));
+              if (all.some(v => v === '' || !(parseFloat(v) >= 0))) { showToast('⚠ Fill all 6 boxes (type 0 if none)'); return; }
 
               const sales = tcSalesSince(periodStart);
               const opening = tcRound(parseFloat(vals.opening));
-              const closingMoney = tcRound(parseFloat(vals.closing));
               const counted = {}, expected = {}, diff = {};
               let totalDiff = 0;
               TC_SLOTS.forEach(s => {
                 sales[s.key] = tcRound(sales[s.key]);
                 counted[s.key] = tcRound(parseFloat(vals.counted[s.key]));
-                expected[s.key] = s.key === 'cash' ? tcRound(opening + sales.cash - closingMoney) : sales[s.key];
+                expected[s.key] = s.key === 'cash' ? tcRound(opening + sales.cash) : sales[s.key];
                 diff[s.key] = tcRound(counted[s.key] - expected[s.key]);
                 totalDiff += diff[s.key];
               });
               totalDiff = tcRound(totalDiff);
               const mismatches = TC_SLOTS.filter(s => diff[s.key] !== 0);
-              showResult({ opening, closingMoney, sales, expected, counted, diff, totalDiff }, mismatches);
+              showResult({ opening, sales, expected, counted, diff, totalDiff }, mismatches);
             }
 
             function showResult(r, mismatches) {
@@ -139,7 +135,7 @@
                     <span></span><span style="text-align:right">System says</span><span style="text-align:right">You typed</span><span style="text-align:right">Result</span>
                   </div>
                   ${rows}
-                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash = opening ${tcMoney(r.opening)} + cash sales ${tcMoney(r.sales.cash)} − closing money ${tcMoney(r.closingMoney)}</div>
+                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash = opening ${tcMoney(r.opening)} + cash sales ${tcMoney(r.sales.cash)}</div>
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-back">← Back</button>
                     <button class="btn btn-success" id="tc-save">Save Closing</button>
@@ -153,7 +149,7 @@
                   const closedAt = await getTrueServerTime();
                   const rec = {
                     id: key, closedAt, periodStart,
-                    opening: r.opening, closingMoney: r.closingMoney,
+                    opening: r.opening,
                     sales: r.sales, expected: r.expected,
                     counted: r.counted, diff: r.diff, totalDiff: r.totalDiff
                   };
@@ -230,7 +226,7 @@
                 <div class="tc-detail" style="display:${mism.length || openWarn ? 'block' : 'none'};padding:10px 12px;background:var(--bg4);overflow-x:auto">
                   ${mism.length ? `<div style="color:var(--danger);font-size:.8rem;font-weight:600;margin-bottom:8px">${mism.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join(' &nbsp;·&nbsp; ')}</div>` : ''}
                   ${openWarn ? `<div style="color:var(--accent3);font-size:.78rem;margin-bottom:8px">⚠ ${openWarn}</div>` : ''}
-                  <div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Opening money: <b style="font-family:var(--mono)">${tcMoney(r.opening)}</b> &nbsp;→&nbsp; Closing money: <b style="font-family:var(--mono)">${tcMoney(r.closingMoney)}</b></div>
+                  <div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Opening money: <b style="font-family:var(--mono)">${tcMoney(r.opening)}</b></div>
                   <div style="min-width:480px">
                     <div style="display:grid;grid-template-columns:1.3fr repeat(3,1fr) 1.2fr;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--border2);font-size:.66rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">
                       <span></span><span style="text-align:right">Sales</span><span style="text-align:right">Should be</span><span style="text-align:right">Typed</span><span style="text-align:right">Result</span>
