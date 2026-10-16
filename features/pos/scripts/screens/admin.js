@@ -22,5 +22,6 @@
             if (name === 'analytics') { renderAnalytics(); loadRestockList(); }
             if (name === 'shophours') { renderShopHours(); }
             if (name === 'expenses') { renderExpenses(); }
-            if (name === 'barcodes') { bcPopulateSelects(); bcLoadHistory(); }
+if (name === 'barcodes') { bcPopulateSelects(); bcLoadHistory(); }
+            if (name === 'tillcheck') { renderTillCheck(); }
           }
