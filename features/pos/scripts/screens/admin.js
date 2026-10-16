@@ -23,5 +23,4 @@
             if (name === 'shophours') { renderShopHours(); }
             if (name === 'expenses') { renderExpenses(); }
 if (name === 'barcodes') { bcPopulateSelects(); bcLoadHistory(); }
-            if (name === 'tillcheck') { renderTillCheck(); }
           }

@@ -1,5 +1,5 @@
           // ══════════════════════════════════════
-          // TILL CLOSING (employee) + TILL CHECK (admin)
+          // CLOSING CHECK (employee) — checks typed money against sales, saves nothing
           // ══════════════════════════════════════
           const TC_SLOTS = [
             { key: 'cash', label: 'Cash', icon: '💵' },
@@ -19,18 +19,11 @@
 
           function tcRound(n) { return Math.round((Number(n) || 0) * 100) / 100; }
           function tcMoney(n) { n = tcRound(n); return 'Rs. ' + (Number.isInteger(n) ? n : n.toFixed(2)); }
-          function tcZero() { return { cash: 0, card: 0, easypaisa: 0, jazzcash: 0, bank: 0 }; }
-
-          async function tcGetLast() {
-            const snap = await fbdb.ref('/tillClosings').orderByKey().limitToLast(1).once('value');
-            const data = snap.val();
-            return data ? Object.values(data)[0] : null;
-          }
 
           // Same period as the "Today" filter in the Sales tab
           function tcSalesSince(startISO) {
             const start = new Date(startISO);
-            const out = tcZero();
+            const out = { cash: 0, card: 0, easypaisa: 0, jazzcash: 0, bank: 0 };
             db.sales.forEach(s => {
               if (new Date(s.time) > start) out[tcSlotOf(s.payMethod)] += parseFloat(s.total) || 0;
             });
@@ -46,13 +39,10 @@
             return diff === 0 ? 'var(--accent2)' : (diff < 0 ? 'var(--danger)' : 'var(--accent3)');
           }
 
-          // ---------- EMPLOYEE: Closing popup ----------
-          async function openTillClosing() {
+          function openTillClosing() {
             if (document.getElementById('tc-overlay')) return;
-            const last = await tcGetLast();
             const periodStart = getSessionStart();
-const prevClosing = last && last.counted && typeof last.counted.cash === 'number' ? last.counted.cash : null;
-            const vals = { opening: prevClosing != null ? String(prevClosing) : '', closing: '', counted: {} };
+            const vals = { opening: '', counted: {} };
 
             const overlay = document.createElement('div');
             overlay.id = 'tc-overlay';
@@ -82,8 +72,6 @@ const prevClosing = last && last.counted && typeof last.counted.cash === 'number
                   <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Cash = all the cash in the box (opening money included)</div>
                   ${methodBoxes}
 
-
-
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-cancel">Cancel</button>
                     <button class="btn btn-primary" id="tc-continue">Continue</button>
@@ -102,22 +90,17 @@ const prevClosing = last && last.counted && typeof last.counted.cash === 'number
               const sales = tcSalesSince(periodStart);
               const opening = tcRound(parseFloat(vals.opening));
               const counted = {}, expected = {}, diff = {};
-              let totalDiff = 0;
               TC_SLOTS.forEach(s => {
                 sales[s.key] = tcRound(sales[s.key]);
                 counted[s.key] = tcRound(parseFloat(vals.counted[s.key]));
                 expected[s.key] = s.key === 'cash' ? tcRound(opening + sales.cash) : sales[s.key];
                 diff[s.key] = tcRound(counted[s.key] - expected[s.key]);
-                totalDiff += diff[s.key];
               });
-              totalDiff = tcRound(totalDiff);
-              const mismatches = TC_SLOTS.filter(s => diff[s.key] !== 0);
-              showResult({ opening, sales, expected, counted, diff, totalDiff }, mismatches);
+              showResult({ opening, sales, expected, counted, diff }, TC_SLOTS.filter(s => diff[s.key] !== 0));
             }
 
             function showResult(r, mismatches) {
-              const ok = mismatches.length === 0;
-              const banner = ok
+              const banner = mismatches.length === 0
                 ? `<div style="padding:12px 14px;border-radius:var(--radius2);background:#12a97a20;border:1px solid #12a97a60;color:var(--accent2);font-weight:600;margin-bottom:16px">✓ Everything matches the sales saved in the system</div>`
                 : `<div style="padding:12px 14px;border-radius:var(--radius2);background:#ef444420;border:1px solid #ef444440;color:var(--danger);font-weight:600;margin-bottom:16px">⚠ Mismatch found<div style="font-weight:500;font-size:.82rem;margin-top:6px;line-height:1.6">${mismatches.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join('<br>')}</div></div>`;
               const rows = TC_SLOTS.map(s => `
@@ -138,117 +121,12 @@ const prevClosing = last && last.counted && typeof last.counted.cash === 'number
                   <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash = opening ${tcMoney(r.opening)} + cash sales ${tcMoney(r.sales.cash)}</div>
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-back">← Back</button>
-                    <button class="btn btn-success" id="tc-save">Save Closing</button>
+                    <button class="btn btn-success" id="tc-done">Done</button>
                   </div>
                 </div>`;
               overlay.querySelector('#tc-back').onclick = showForm;
-              overlay.querySelector('#tc-save').onclick = async function () {
-                this.disabled = true;
-                try {
-                  const key = String(Date.now() + _serverTimeOffset);
-                  const closedAt = await getTrueServerTime();
-                  const rec = {
-                    id: key, closedAt, periodStart,
-                    opening: r.opening,
-                    sales: r.sales, expected: r.expected,
-                    counted: r.counted, diff: r.diff, totalDiff: r.totalDiff
-                  };
-                  if (prevClosing != null) rec.prevClosing = prevClosing;
-                  await fbdb.ref('/tillClosings/' + key).set(rec);
-                  showToast(mismatches.length ? '⚠ Closing saved — mismatch recorded' : '✓ Closing saved — all matched');
-                  overlay.remove();
-                } catch (e) {
-                  console.error(e);
-                  showToast('⚠ Could not save — try again');
-                  this.disabled = false;
-                }
-              };
+              overlay.querySelector('#tc-done').onclick = () => overlay.remove();
             }
 
             showForm();
-          }
-
-          // ---------- ADMIN: Till Check tab ----------
-          async function renderTillCheck() {
-            const el = document.getElementById('tc-list');
-            if (!el) return;
-            const snap = await fbdb.ref('/tillClosings').orderByKey().limitToLast(60).once('value');
-            const data = snap.val();
-            const sOk = document.getElementById('tc-stat-ok');
-            const sBad = document.getElementById('tc-stat-bad');
-            const sTotal = document.getElementById('tc-stat-total');
-            if (!data) {
-              el.innerHTML = '<div style="color:var(--text3);font-size:.82rem">No closings yet</div>';
-              if (sOk) sOk.textContent = '0';
-              if (sBad) sBad.textContent = '0';
-              if (sTotal) sTotal.textContent = '0';
-              return;
-            }
-            const entries = Object.entries(data).sort((a, b) => a[0] < b[0] ? 1 : -1);
-            const valid = entries.filter(([k, r]) => typeof r.opening === 'number');
-            const bad = valid.filter(([k, r]) => TC_SLOTS.some(s => r.diff && r.diff[s.key] != null && r.diff[s.key] !== 0)).length;
-            if (sTotal) sTotal.textContent = valid.length;
-            if (sBad) sBad.textContent = bad;
-            if (sOk) sOk.textContent = valid.length - bad;
-
-            el.innerHTML = entries.map(([key, r]) => {
-              if (typeof r.opening !== 'number') {
-                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:var(--radius2);border:1px solid var(--border);background:var(--bg3)">
-                  <span style="font-size:.78rem;color:var(--text3)">Old test record (old format)</span>
-                  <button onclick="tcDelete('${key}')" style="padding:3px 10px;font-size:.72rem;border-radius:4px;border:1px solid #ef444440;background:#ef444420;color:var(--danger);cursor:pointer;font-weight:600">🗑 Delete</button>
-                </div>`;
-              }
-              const when = new Date(r.closedAt).toLocaleString('en-PK', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' });
-              const mism = TC_SLOTS.filter(s => r.diff && r.diff[s.key] != null && r.diff[s.key] !== 0);
-              const openWarn = (typeof r.prevClosing === 'number' && Math.abs(r.opening - r.prevClosing) > 0.001)
-                ? `Opened with ${tcMoney(r.opening)} but last closing money was ${tcMoney(r.prevClosing)}` : '';
-              const badge = mism.length
-                ? '<span style="font-size:.72rem;padding:2px 10px;border-radius:20px;background:#ef444420;border:1px solid #ef444440;color:var(--danger);font-weight:700">⚠ Mismatch</span>'
-                : '<span style="font-size:.72rem;padding:2px 10px;border-radius:20px;background:#12a97a20;border:1px solid #12a97a60;color:var(--accent2);font-weight:700">✓ Matched</span>';
-              const rows = TC_SLOTS.map(s => {
-                const d = r.diff && r.diff[s.key] != null ? r.diff[s.key] : 0;
-                return `<div style="display:grid;grid-template-columns:1.3fr repeat(3,1fr) 1.2fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.78rem;align-items:center">
-                  <span>${s.icon} ${s.label}</span>
-                  <span style="font-family:var(--mono);text-align:right;color:var(--text3)">${tcMoney(r.sales ? r.sales[s.key] : 0)}</span>
-                  <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.expected ? r.expected[s.key] : 0)}</span>
-                  <span style="font-family:var(--mono);text-align:right">${tcMoney(r.counted ? r.counted[s.key] : 0)}</span>
-                  <span style="text-align:right;font-weight:700;color:${tcDiffColor(d)}">${tcDiffText(d)}</span>
-                </div>`;
-              }).join('');
-              return `<div data-tc="${key}" style="border-radius:var(--radius2);border:1px solid var(--border);overflow:hidden">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3)">
-                  <div style="cursor:pointer;flex:1;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap" onclick="var d=this.closest('[data-tc]').querySelector('.tc-detail');d.style.display=d.style.display==='none'?'block':'none'">
-                    <span style="font-family:var(--mono);font-size:.8rem;color:var(--text2)">${when}</span>
-                    ${badge}
-                  </div>
-                  <button onclick="tcDelete('${key}')" style="padding:3px 10px;font-size:.72rem;border-radius:4px;border:1px solid #ef444440;background:#ef444420;color:var(--danger);cursor:pointer;font-weight:600;flex-shrink:0">🗑 Delete</button>
-                </div>
-                <div class="tc-detail" style="display:${mism.length || openWarn ? 'block' : 'none'};padding:10px 12px;background:var(--bg4);overflow-x:auto">
-                  ${mism.length ? `<div style="color:var(--danger);font-size:.8rem;font-weight:600;margin-bottom:8px">${mism.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join(' &nbsp;·&nbsp; ')}</div>` : ''}
-                  ${openWarn ? `<div style="color:var(--accent3);font-size:.78rem;margin-bottom:8px">⚠ ${openWarn}</div>` : ''}
-                  <div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">Opening money: <b style="font-family:var(--mono)">${tcMoney(r.opening)}</b></div>
-                  <div style="min-width:480px">
-                    <div style="display:grid;grid-template-columns:1.3fr repeat(3,1fr) 1.2fr;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--border2);font-size:.66rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">
-                      <span></span><span style="text-align:right">Sales</span><span style="text-align:right">Should be</span><span style="text-align:right">Typed</span><span style="text-align:right">Result</span>
-                    </div>
-                    ${rows}
-                  </div>
-                </div>
-              </div>`;
-            }).join('');
-          }
-
-          async function tcDelete(key) {
-            const pwd = await showPasswordPrompt('🔑 Enter Wipe Password to delete this closing:');
-            if (pwd === null) return;
-            const res = await fetch(shopApi('checkwipe'), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ password: pwd })
-            });
-            const data = await res.json();
-            if (!data.ok) { alert('❌ Wrong password!'); return; }
-            await fbdb.ref('/tillClosings/' + key).remove();
-            showToast('🗑 Closing deleted');
-            renderTillCheck();
           }
