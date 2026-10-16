@@ -108,7 +108,7 @@
               const totalDiff = tcRound(totalCounted - totalSales);
               // Cash is NOT checked on its own (it is random) - only the total.
               // Card / Easypaisa / JazzCash / Bank must each match their own sales.
-              const mismatches = TC_SLOTS.filter(s => s.key !== 'cash' && diff[s.key] !== 0);
+              const mismatches = TC_SLOTS.filter(s => diff[s.key] !== 0);
               showResult({ opening, sales, expected, counted, diff, totalSales, totalCounted, totalDiff }, mismatches);
             }
 
@@ -127,7 +127,7 @@
                   <span>${s.icon} ${s.label}</span>
                   <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.expected[s.key])}</span>
                   <span style="font-family:var(--mono);text-align:right">${tcMoney(r.counted[s.key])}</span>
-                  <span style="text-align:right;font-weight:700;color:${s.key === 'cash' ? 'var(--text3)' : tcDiffColor(r.diff[s.key])}">${s.key === 'cash' ? 'see total' : tcDiffText(r.diff[s.key])}</span>
+                  <span style="text-align:right;font-weight:700;color:${tcDiffColor(r.diff[s.key])}">${tcDiffText(r.diff[s.key])}</span>
                 </div>`).join('') + `
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:10px 0;font-size:.85rem;font-weight:700;align-items:center">
                   <span>Total</span>
@@ -143,7 +143,7 @@
                     <span></span><span style="text-align:right">System says</span><span style="text-align:right">You typed</span><span style="text-align:right">Result</span>
                   </div>
                   ${rows}
-                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}. Cash is only checked inside the Total.</div>
+                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}.</div>
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-back">← Back</button>
                     <button class="btn btn-success" id="tc-done">Done</button>
