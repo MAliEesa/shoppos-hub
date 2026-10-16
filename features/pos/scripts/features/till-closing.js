@@ -61,8 +61,9 @@
                 </div>`).join('') + '</div>';
               overlay.innerHTML = `
                 <div style="${boxStyle}">
+<style>#tc-overlay input::-webkit-outer-spin-button,#tc-overlay input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}#tc-overlay input[type=number]{-moz-appearance:textfield}</style>
                   <div style="font-family:var(--mono);font-size:1rem;color:var(--accent2);margin-bottom:4px">🔒 Closing</div>
-                  <div style="font-size:.78rem;color:var(--text3);margin-bottom:18px">Fill all boxes (type 0 if none), then press Continue.</div>
+                  <div style="font-size:.78rem;color:var(--text3);margin-bottom:18px">Opening money is required. Leave a box empty if that method had no money, then press Continue.</div>
 
                   <div style="${secStyle}">Opening money</div>
                   <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Money that was in the box when the shop opened</div>
@@ -84,8 +85,10 @@
             function onContinue() {
               vals.opening = overlay.querySelector('#tc-opening').value.trim();
               TC_SLOTS.forEach(s => { vals.counted[s.key] = overlay.querySelector(`input[data-k="${s.key}"]`).value.trim(); });
-              const all = [vals.opening].concat(TC_SLOTS.map(s => vals.counted[s.key]));
-              if (all.some(v => v === '' || !(parseFloat(v) >= 0))) { showToast('⚠ Fill all 6 boxes (type 0 if none)'); return; }
+              // Only opening money is required. An empty method box counts as 0.
+              if (vals.opening === '' || !(parseFloat(vals.opening) >= 0)) { showToast('⚠ Opening money is required'); return; }
+              TC_SLOTS.forEach(s => { if (vals.counted[s.key] === '') vals.counted[s.key] = '0'; });
+              if (TC_SLOTS.some(s => !(parseFloat(vals.counted[s.key]) >= 0))) { showToast('⚠ Amounts cannot be negative'); return; }
 
               const sales = tcSalesSince(periodStart);
               const opening = tcRound(parseFloat(vals.opening));
