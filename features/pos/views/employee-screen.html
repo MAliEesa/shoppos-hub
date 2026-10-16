@@ -53,9 +53,9 @@
                   <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-bottom:10px">
                     <span style="font-size:.8rem;color:var(--text3)">Customer pays</span>
                     <span style="font-family:var(--mono);font-size:.82rem;color:var(--text2)">Rs.</span>
-                    <input type="number" id="cash-input" min="0" step="1" placeholder="0"
+                                        <input type="text" inputmode="decimal" id="cash-input" placeholder="0"
                     style="width:110px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-family:var(--mono);font-size:.95rem;padding:7px 10px;outline:none;text-align:right"
-                    oninput="calcChange()" onkeydown="cashInputKeydown(event)">
+                    oninput="this.value=this.value.replace(/[^0-9.]/g,'');calcChange()" onkeydown="cashInputKeydown(event)">
                     <span style="font-size:.82rem;color:var(--text3)">=</span>
                     <span style="font-family:var(--mono);font-size:1.1rem;font-weight:700;min-width:120px;text-align:right" id="change-display">—</span>
                   </div>

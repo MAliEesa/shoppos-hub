@@ -283,6 +283,8 @@
             // Snapshot + clear the bill IMMEDIATELY, synchronously — before any await.
             // This is the fix: nothing can mutate `bill` in between anymore.
             const billSnapshot = bill.map(b => ({ product: b.product, qty: b.qty }));
+            document.getElementById('cash-input').value = '';
+            calcChange();
             const total = billSnapshot.reduce((s, b) => s + b.qty * parseFloat(b.product.sellPrice), 0);
             const items = billSnapshot.map(b => ({ name: b.product.name, ref: b.product.ref, qty: b.qty, price: parseFloat(b.product.sellPrice) }));
             bill = [];
