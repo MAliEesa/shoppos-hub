@@ -53,7 +53,7 @@ export default function HubShell({ shops, children }) {
 
           <div className="nav-section">Shops</div>
           {shops.map((s) => (
-            <Link key={s.id} href={`/shop/${s.id}`} className="nav-item">
+<Link key={s.id} href={`https://${s.host}`} className="nav-item" target="_blank" rel="noopener">
               <span className="nav-dot" style={{ background: s.accentColor }} />
               {s.name}
             </Link>

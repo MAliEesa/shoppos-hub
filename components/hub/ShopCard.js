@@ -3,7 +3,7 @@ import Link from 'next/link';
 export default function ShopCard({ shop }) {
   return (
     <Link
-      href={`/shop/${shop.id}`}
+href={`https://${shop.host}`} target="_blank" rel="noopener"
       className="shop-card"
       style={{ '--card-accent': shop.accentColor }}
     >
