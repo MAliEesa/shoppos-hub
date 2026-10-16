@@ -41,7 +41,7 @@
 
           function openTillClosing() {
             if (document.getElementById('tc-overlay')) return;
-            const periodStart = getSessionStart();
+                        const periodStart = karachiTimeToISO(todayStr(), '00:00');
             const vals = { opening: '', counted: {} };
 
             const overlay = document.createElement('div');
