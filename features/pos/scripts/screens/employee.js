@@ -225,7 +225,7 @@
             if (nowK.getUTCHours() < 3) dayStr = addDaysToDateStr(dayStr, -1);
             const threeAm = karachiTimeToISO(dayStr, '03:00');
             const ss = getSessionStart();
-            return new Date(ss) > new Date(threeAm) ? ss : threeAm;
+            return threeAm;
           }
 
           function openRecords() {
@@ -270,10 +270,13 @@
             const close = () => {
               const p = document.getElementById('rec-panel');
               if (p) p.style.transform = 'translateY(100%)';
+                          document.removeEventListener('keydown', escClose);
               setTimeout(() => overlay.remove(), 250);
             };
             overlay.querySelector('#rec-close').onclick = close;
             overlay.onclick = e => { if (e.target === overlay) close(); };
+            const escClose = e => { if (e.key === 'Escape') close(); };
+            document.addEventListener('keydown', escClose);
             requestAnimationFrame(() => requestAnimationFrame(() => {
               const p = document.getElementById('rec-panel');
               if (p) p.style.transform = 'translateY(0)';
