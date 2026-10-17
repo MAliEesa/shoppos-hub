@@ -217,6 +217,69 @@
               el.style.color = 'var(--accent2)';
             }
           }
+          // Start of the current "day" for the Record panel: the last 3:00 AM (Karachi),
+          // or the last closing if that is later. Nothing is deleted - older sales are just not shown here.
+          function recordsStartISO() {
+            const nowK = toKarachi(serverNow());
+            let dayStr = todayStr();
+            if (nowK.getUTCHours() < 3) dayStr = addDaysToDateStr(dayStr, -1);
+            const threeAm = karachiTimeToISO(dayStr, '03:00');
+            const ss = getSessionStart();
+            return new Date(ss) > new Date(threeAm) ? ss : threeAm;
+          }
+
+          function openRecords() {
+            if (document.getElementById('rec-overlay')) return;
+            const start = new Date(recordsStartISO());
+            const sales = db.sales.filter(s => new Date(s.time) > start).sort((a, b) => new Date(b.time) - new Date(a.time));
+            const total = sales.reduce((a, s) => a + (parseFloat(s.total) || 0), 0);
+            const rows = sales.map(s => {
+              const t = new Date(s.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' });
+              const names = (s.items || []).map(i => i.name + ' x' + i.qty).join(', ');
+              const cashInfo = (s.cashGiven != null && s.change != null)
+                ? `<div style="font-size:.72rem;color:var(--text3);margin-top:2px">Paid Rs. ${Number(s.cashGiven).toFixed(0)} · Change Rs. ${Number(s.change).toFixed(0)}</div>` : '';
+              return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;gap:10px">
+                  <div style="min-width:0">
+                    <div style="font-family:var(--mono);font-size:.75rem;color:var(--text3)">#${String(s.id).padStart(4, '0')} · ${t} · ${s.payMethod || 'Cash'}</div>
+                    <div style="font-size:.82rem;margin-top:2px">${names}</div>
+                    ${cashInfo}
+                  </div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--accent2);white-space:nowrap">Rs. ${(parseFloat(s.total) || 0).toFixed(0)}</div>
+                </div>
+              </div>`;
+            }).join('');
+
+            const overlay = document.createElement('div');
+            overlay.id = 'rec-overlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:#000a;z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+            overlay.innerHTML = `
+              <div id="rec-panel" style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px 14px 0 0;width:100%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -12px 40px #0008">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border2)">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:1rem;color:var(--accent2)">📋 Today's Sales</div>
+                    <div style="font-size:.78rem;color:var(--text3);margin-top:2px">${sales.length} sale${sales.length === 1 ? '' : 's'} · Rs. ${total.toFixed(0)}</div>
+                  </div>
+                  <button class="btn btn-ghost" id="rec-close">✕ Close</button>
+                </div>
+                <div style="overflow-y:auto;padding:4px 20px 20px">
+                  ${rows || '<div style="color:var(--text3);font-size:.85rem;padding:24px 0;text-align:center">No sales yet today</div>'}
+                </div>
+              </div>`;
+            document.body.appendChild(overlay);
+            const close = () => {
+              const p = document.getElementById('rec-panel');
+              if (p) p.style.transform = 'translateY(100%)';
+              setTimeout(() => overlay.remove(), 250);
+            };
+            overlay.querySelector('#rec-close').onclick = close;
+            overlay.onclick = e => { if (e.target === overlay) close(); };
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              const p = document.getElementById('rec-panel');
+              if (p) p.style.transform = 'translateY(0)';
+            }));
+          }
+
           function clearBill() {
             if (bill.length === 0) return;
             bill = [];
@@ -276,6 +339,14 @@
             if (bill.length === 0) { showToast('⚠ Nothing in bill'); return; }
             if (!_serverTimeSynced) { showToast('⏳ Still syncing time — try checkout again in a second'); return; }
 
+            // Cash sales: the amount the customer paid must be entered, and must cover the total.
+            const _billTotal = bill.reduce((s, b) => s + b.qty * parseFloat(b.product.sellPrice), 0);
+            const _cashGiven = parseFloat(document.getElementById('cash-input').value) || 0;
+            if (selectedPayMethod === 'Cash') {
+              if (_cashGiven <= 0) { showToast('⚠ Enter the amount the customer paid'); document.getElementById('cash-input').focus(); return; }
+              if (_cashGiven + 0.005 < _billTotal) { showToast('⚠ Customer paid less than the total'); document.getElementById('cash-input').focus(); return; }
+            }
+
             checkoutInProgress = true;
             const checkoutBtn = document.getElementById('checkout-btn');
             if (checkoutBtn) checkoutBtn.disabled = true;
@@ -297,6 +368,8 @@
                 items,
                 total,
                 payMethod: selectedPayMethod,
+                cashGiven: selectedPayMethod === 'Cash' ? _cashGiven : null,
+                change: selectedPayMethod === 'Cash' ? Math.round((_cashGiven - total) * 100) / 100 : null,
                 time: serverTime
               };
               items.forEach(item => {

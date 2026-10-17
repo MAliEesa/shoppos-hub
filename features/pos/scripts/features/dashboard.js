@@ -84,6 +84,7 @@
                   </div>
                   <div class="sale-detail" style="display:none;margin-top:8px;padding:8px;background:var(--bg3);border-radius:var(--radius2)">
                     ${itemsDetail}
+                    ${(s.cashGiven != null && s.change != null && !privacyMode) ? `<div style="padding-top:6px;font-size:.75rem;color:var(--text3);font-family:var(--mono)">Customer paid Rs. ${Number(s.cashGiven).toFixed(0)} · Change Rs. ${Number(s.change).toFixed(0)}</div>` : ''}
                     <div style="display:flex;justify-content:space-between;padding-top:6px;font-family:var(--mono);font-size:.8rem;font-weight:700">
                       <span style="color:var(--text3)">TOTAL</span>
                       <span style="color:var(--accent2)">${privacyMode ? 'Rs. ---' : 'Rs. ' + s.total.toFixed(0)}</span>
