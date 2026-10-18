@@ -75,5 +75,5 @@
             db.nextSaleId = 1;
             updateDashboard();
             showToast('🗑 All sales and closings wiped');
-            fetch(shopApi('wipealert'), { method: 'POST' });
+            fetch(shopApi('wipealert'), { method: 'POST', headers: await authHeader() });
           }

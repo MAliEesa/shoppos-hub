@@ -24,7 +24,7 @@
           try {
             await fetch(shopApi('notify'), {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
               body: JSON.stringify({ total: total.toFixed(0), itemCount })
             });
           } catch(e) { console.log('Notification send failed:', e); }
