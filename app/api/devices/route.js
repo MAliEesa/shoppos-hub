@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { SHOPS, getShop } from '@/lib/shops.config';
-import { listDevices, updateDevice, removeDevice } from '@/lib/server/services/devices';
+import { listDevices, updateDevice, removeDevice, withTimeout } from '@/lib/server/services/devices';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export async function GET() {
     SHOPS.map(async (s) => {
       const base = { id: s.id, name: s.name, accentColor: s.accentColor };
       try {
-        return { ...base, devices: await listDevices(s) };
+        return { ...base, devices: await withTimeout(listDevices(s)) };
       } catch (e) {
         console.error('listDevices failed', s.id, e);
         return { ...base, devices: [], error: true };
@@ -29,15 +29,15 @@ export async function POST(req) {
 
   try {
     if (body.action === 'approve') {
-      await updateDevice(shop, body.key, { approved: true });
+      await withTimeout(updateDevice(shop, body.key, { approved: true }));
     } else if (body.action === 'unapprove') {
-      await updateDevice(shop, body.key, { approved: false });
+await withTimeout(updateDevice(shop, body.key, { approved: false }));
     } else if (body.action === 'rename') {
       const name = String(body.name || '').trim().slice(0, 30);
       if (!name) return NextResponse.json({ ok: false }, { status: 400 });
-      await updateDevice(shop, body.key, { name });
+      await withTimeout(updateDevice(shop, body.key, { name }));
     } else if (body.action === 'remove') {
-      await removeDevice(shop, body.key);
+await withTimeout(removeDevice(shop, body.key));
     } else {
       return NextResponse.json({ ok: false }, { status: 400 });
     }

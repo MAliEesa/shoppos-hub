@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withShop } from '@/lib/server/withShop';
 import { checkAdminPassword } from '@/lib/server/services/passwords';
-import { registerDevice, checkDevice, setDeviceCookie } from '@/lib/server/services/devices';
+import { registerDevice, checkDevice, setDeviceCookie, withTimeout } from '@/lib/server/services/devices';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export const POST = withShop(async (req, shop) => {
   if (checkAdminPassword(shop, password)) {
     const res = NextResponse.json({ ok: true });
     try {
-      const { token } = await registerDevice(req, shop);
+      const { token } = await withTimeout(registerDevice(req, shop));
       if (token) setDeviceCookie(res, token);
     } catch (e) {
       console.error('registerDevice failed', e);
@@ -23,7 +23,7 @@ export const POST = withShop(async (req, shop) => {
 // Asked when the admin screen opens: is this device approved to skip the password?
 export const GET = withShop(async (req, shop) => {
   try {
-    const { ok, token } = await checkDevice(req, shop);
+    const { ok, token } = await withTimeout(checkDevice(req, shop));
     const res = NextResponse.json({ ok }, { headers: { 'Cache-Control': 'no-store' } });
     if (token) setDeviceCookie(res, token);
     return res;
