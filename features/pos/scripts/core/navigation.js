@@ -38,6 +38,18 @@
                 initAdmScreen();
                 return;
               }
+try {
+                const r0 = await fetch(shopApi('checkpass'), { cache: 'no-store' });
+                const d0 = await r0.json();
+                if (d0.ok) {
+                  adminUnlocked = true;
+                  document.getElementById('landing').style.display = 'none';
+                  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                  document.getElementById('adm-screen').classList.add('active');
+                  initAdmScreen();
+                  return;
+                }
+              } catch (e) {}
               const entered = await showPasswordPrompt('🔒 Enter Admin Password:');
               if (entered === null) return;
               fetch(shopApi('checkpass'), {

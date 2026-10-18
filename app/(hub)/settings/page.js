@@ -1,10 +1,13 @@
 import { SHOPS } from '@/lib/shops.config';
+import DevicesPanel from '@/components/hub/DevicesPanel';
 
 export default function SettingsPage() {
   return (
     <div className="page">
       <h1 className="page-title">Settings</h1>
       <p className="page-sub">Hub-wide settings. Settings for one shop stay inside that shop.</p>
+
+<DevicesPanel />
 
       <section className="panel">
         <h2>Shops</h2>
