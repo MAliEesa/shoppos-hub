@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/shop/shop1/autoclosing", "schedule": "0 22 * * *" },
+    { "path": "/api/shop/shop2/autoclosing", "schedule": "0 22 * * *" }
+  ]
+}
