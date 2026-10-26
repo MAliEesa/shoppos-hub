@@ -29,52 +29,77 @@
             });
           }
 
-          async function openScreen(s) {
-            if (s === 'adm') {
-              if (adminUnlocked) {
-                document.getElementById('landing').style.display = 'none';
-                document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-                document.getElementById('adm-screen').classList.add('active');
-                initAdmScreen();
-                return;
-              }
-try {
-                const r0 = await fetch(shopApi('checkpass'), { cache: 'no-store' });
-                const d0 = await r0.json();
-                if (d0.ok) {
-                  adminUnlocked = true;
-                  document.getElementById('landing').style.display = 'none';
-                  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-                  document.getElementById('adm-screen').classList.add('active');
-                  initAdmScreen();
-                  return;
-                }
-              } catch (e) {}
-              const entered = await showPasswordPrompt('🔒 Enter Admin Password:');
-              if (entered === null) return;
-              fetch(shopApi('checkpass'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: entered })
-              })
-              .then(r => r.json())
-              .then(data => {
-                if (data.ok) {
-                  adminUnlocked = true;
-                  document.getElementById('landing').style.display = 'none';
-                  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-                  document.getElementById('adm-screen').classList.add('active');
-                  initAdmScreen();
-                } else {
-                  alert('❌ Wrong password!');
-                }
-              });
-              return;
+                    let adminOpening = false;
+
+          function adminBusy(on, text) {
+            let el = document.getElementById('adm-busy');
+            if (!on) { if (el) el.remove(); return; }
+            if (!el) {
+              el = document.createElement('div');
+              el.id = 'adm-busy';
+              el.style.cssText = 'position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:9998;color:#fff;font-family:var(--mono);font-size:.95rem';
+              document.body.appendChild(el);
             }
+            el.textContent = text || 'Checking...';
+          }
+
+          function showAdminScreen() {
+            adminUnlocked = true;
             document.getElementById('landing').style.display = 'none';
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-            document.getElementById(s + '-screen').classList.add('active');
-            if (s === 'emp') initEmpScreen();
+            document.getElementById('adm-screen').classList.add('active');
+            initAdmScreen();
+          }
+
+          async function callCheckpass(options) {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 15000);
+            try {
+              const r = await fetch(shopApi('checkpass'), { ...options, signal: ctrl.signal });
+              return await r.json();
+            } finally {
+              clearTimeout(timer);
+            }
+          }
+
+          async function openScreen(s) {
+            if (s !== 'adm') {
+              document.getElementById('landing').style.display = 'none';
+              document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+              document.getElementById(s + '-screen').classList.add('active');
+              if (s === 'emp') initEmpScreen();
+              return;
+            }
+            if (adminOpening) return;
+            adminOpening = true;
+            try {
+              if (adminUnlocked) { showAdminScreen(); return; }
+              adminBusy(true, 'Checking this device...');
+              try {
+                const d0 = await callCheckpass({ cache: 'no-store' });
+                if (d0.ok) { showAdminScreen(); return; }
+              } catch (e) {}
+              adminBusy(false);
+              const entered = await showPasswordPrompt('🔒 Enter Admin Password:');
+              if (entered === null) return;
+              adminBusy(true, 'Checking password...');
+              try {
+                const data = await callCheckpass({
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ password: entered })
+                });
+                adminBusy(false);
+                if (data.ok) showAdminScreen();
+                else alert('❌ Wrong password!');
+              } catch (e) {
+                adminBusy(false);
+                alert('Could not reach the server. Please try again.');
+              }
+            } finally {
+              adminBusy(false);
+              adminOpening = false;
+            }
           }
           function goHome() {
             document.getElementById('landing').style.display = 'flex';

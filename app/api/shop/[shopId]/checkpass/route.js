@@ -10,7 +10,7 @@ export const POST = withShop(async (req, shop) => {
   if (checkAdminPassword(shop, password)) {
     const res = NextResponse.json({ ok: true });
     try {
-      const { token } = await withTimeout(registerDevice(req, shop));
+const { token } = await withTimeout(registerDevice(req, shop), 10000);
       if (token) setDeviceCookie(res, token);
     } catch (e) {
       console.error('registerDevice failed', e);
@@ -23,7 +23,7 @@ export const POST = withShop(async (req, shop) => {
 // Asked when the admin screen opens: is this device approved to skip the password?
 export const GET = withShop(async (req, shop) => {
   try {
-    const { ok, token } = await withTimeout(checkDevice(req, shop));
+const { ok, token } = await withTimeout(checkDevice(req, shop), 8000);
     const res = NextResponse.json({ ok }, { headers: { 'Cache-Control': 'no-store' } });
     if (token) setDeviceCookie(res, token);
     return res;
