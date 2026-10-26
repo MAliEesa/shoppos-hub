@@ -287,12 +287,98 @@ function changeQty(i, delta) {
           }
 
           function clearBill() {
-            if (bill.length === 0) return;
-            bill = [];
-            renderBill();
-            document.getElementById('cash-input').value = '';
-            calcChange();
-            showToast('Bill cleared');
+            let _spendings = [];
+if (typeof fbdb !== 'undefined') fbdb.ref('/spendings').on('value', snap => { const v = snap.val(); _spendings = v ? Object.values(v) : []; if (document.getElementById('sp-overlay')) spRender(); });
+function spendingsSince(startISO) { const st = new Date(startISO); return _spendings.filter(x => new Date(x.createdAt) > st); }
+function spEsc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+function spRender() {
+  const listEl = document.getElementById('sp-list'), totEl = document.getElementById('sp-total');
+  if (!listEl) return;
+  const items = spendingsSince(recordsStartISO()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const total = items.reduce((a, x) => a + (parseFloat(x.amount) || 0), 0);
+  totEl.textContent = items.length + ' spending' + (items.length === 1 ? '' : 's') + ' · Rs. ' + total.toFixed(0);
+  listEl.innerHTML = items.length ? items.map(x => {
+    const t = new Date(x.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi' });
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div style="min-width:0"><div style="font-size:.85rem">${spEsc(x.name)}</div><div style="font-family:var(--mono);font-size:.72rem;color:var(--text3)">${t}</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-family:var(--mono);font-weight:700;color:var(--danger);white-space:nowrap">Rs. ${(parseFloat(x.amount) || 0).toFixed(0)}</div>
+      <button onclick="deleteSpending('${x.key}')" style="padding:3px 10px;font-size:.72rem;border-radius:4px;border:1px solid #ef444440;background:#ef444420;color:var(--danger);cursor:pointer">🗑</button></div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:.85rem;padding:24px 0;text-align:center">No spending yet today</div>';
+}
+
+function addSpending() {
+  const nameEl = document.getElementById('sp-name'), amtEl = document.getElementById('sp-amount');
+  const name = nameEl.value.trim(), amount = parseFloat(amtEl.value);
+  if (!name) { showToast('⚠ Enter payment name'); return; }
+  if (!(amount > 0)) { showToast('⚠ Enter a valid price'); return; }
+  const key = 'exp_' + Date.now();
+  const createdAt = serverNow().toISOString();
+  fbdb.ref('/spendings/' + key).set({ key, name, amount, createdAt });
+  fbdb.ref('/expenses/' + key).set({ key, name, amount, createdAt, fromSpending: true });
+  nameEl.value = ''; amtEl.value = '';
+  showToast('✓ Spending added: ' + name);
+  nameEl.focus();
+}
+
+async function deleteSpending(key) {
+  const pwd = await showPasswordPrompt('🔑 Enter Wipe Password to delete this spending:');
+  if (pwd === null) return;
+  const res = await fetch(shopApi('checkwipe'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pwd }) });
+  const data = await res.json();
+  if (!data.ok) { alert('❌ Wrong password!'); return; }
+  fbdb.ref('/spendings/' + key).remove();
+  fbdb.ref('/expenses/' + key).remove();
+  showToast('🗑 Spending deleted');
+}
+
+function openSpending() {
+  if (document.getElementById('sp-overlay')) return;
+  const inp = 'background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-size:.9rem;padding:9px 12px;outline:none';
+  const overlay = document.createElement('div');
+  overlay.id = 'sp-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#000a;z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `
+    <div id="sp-panel" style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px 14px 0 0;width:100%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -12px 40px #0008">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border2)">
+        <div>
+          <div style="font-family:var(--mono);font-size:1rem;color:var(--accent2)">💸 Today's Spending</div>
+          <div id="sp-total" style="font-size:.78rem;color:var(--text3);margin-top:2px"></div>
+        </div>
+        <button class="btn btn-ghost" id="sp-close">✕ Close</button>
+      </div>
+      <div style="display:flex;gap:8px;padding:14px 20px 4px;flex-wrap:wrap">
+        <input id="sp-name" type="text" placeholder="Payment name (e.g. Home shopping)" style="${inp};flex:2;min-width:160px">
+        <input id="sp-amount" type="number" min="0" step="any" inputmode="decimal" placeholder="Price" style="${inp};flex:1;min-width:90px;text-align:right">
+        <button class="btn btn-primary" id="sp-add">+ Add</button>
+      </div>
+      <div id="sp-list" style="overflow-y:auto;padding:4px 20px 20px"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  spRender();
+  const close = () => {
+    const p = document.getElementById('sp-panel');
+    if (p) p.style.transform = 'translateY(100%)';
+    document.removeEventListener('keydown', escClose);
+    setTimeout(() => overlay.remove(), 250);
+    if (window.innerWidth > 768) document.getElementById('barcode-input').focus();
+  };
+  const escClose = e => { if (e.key === 'Escape') close(); };
+  overlay.querySelector('#sp-close').onclick = close;
+  overlay.onclick = e => { if (e.target === overlay) close(); };
+  overlay.querySelector('#sp-add').onclick = addSpending;
+  overlay.querySelector('#sp-amount').addEventListener('keydown', e => { if (e.key === 'Enter') addSpending(); });
+  overlay.querySelector('#sp-name').addEventListener('keydown', e => { if (e.key === 'Enter') overlay.querySelector('#sp-amount').focus(); });
+  document.addEventListener('keydown', escClose);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const p = document.getElementById('sp-panel');
+    if (p) p.style.transform = 'translateY(0)';
+    const n = document.getElementById('sp-name'); if (n) n.focus();
+  }));
+}
+
+function clearBill() {
           }
 
           // _serverTimeOffset moved to top

@@ -91,6 +91,7 @@
               if (TC_SLOTS.some(s => !(parseFloat(vals.counted[s.key]) >= 0))) { showToast('⚠ Amounts cannot be negative'); return; }
 
               const sales = tcSalesSince(periodStart);
+const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFloat(x.amount) || 0), 0));
               const opening = tcRound(parseFloat(vals.opening));
               const counted = {}, expected = {}, diff = {};
               let totalSales = 0, totalCounted = 0;
@@ -98,18 +99,18 @@
                 sales[s.key] = tcRound(sales[s.key]);
                 // Cash: opening money is taken out first. Other methods are used as typed.
                 counted[s.key] = tcRound(parseFloat(vals.counted[s.key]) - (s.key === 'cash' ? opening : 0));
-                expected[s.key] = sales[s.key];
+                expected[s.key] = tcRound(sales[s.key] - (s.key === 'cash' ? spent : 0));
                 diff[s.key] = tcRound(counted[s.key] - expected[s.key]);
                 totalSales += sales[s.key];
                 totalCounted += counted[s.key];
               });
-              totalSales = tcRound(totalSales);
+              totalSales = tcRound(totalSales - spent);
               totalCounted = tcRound(totalCounted);
               const totalDiff = tcRound(totalCounted - totalSales);
               // Cash is NOT checked on its own (it is random) - only the total.
               // Card / Easypaisa / JazzCash / Bank must each match their own sales.
               const mismatches = TC_SLOTS.filter(s => diff[s.key] !== 0);
-              showResult({ opening, sales, expected, counted, diff, totalSales, totalCounted, totalDiff }, mismatches);
+              showResult({ opening, spent, sales, expected, counted, diff, totalSales, totalCounted, totalDiff }, mismatches);
             }
 
             function showResult(r, mismatches) {
@@ -143,7 +144,7 @@
                     <span></span><span style="text-align:right">System says</span><span style="text-align:right">You typed</span><span style="text-align:right">Result</span>
                   </div>
                   ${rows}
-                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}.</div>
+                <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}.${r.spent > 0 ? `<br>Spending today ${tcMoney(r.spent)} is already taken out of the Cash "System says".` : ''}</div>
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-back">← Back</button>
                     <button class="btn btn-success" id="tc-done">Done</button>
