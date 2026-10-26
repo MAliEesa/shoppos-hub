@@ -148,7 +148,10 @@
                 <button class="btn btn-primary" onclick="confirmEditExpense('${key}')">💾 Save</button>
               </div>
             </div>`;
+            overlay.id = 'exp-edit-overlay';
           document.body.appendChild(overlay);
+          const escExp = e => { if (!overlay.isConnected) { document.removeEventListener('keydown', escExp); return; } if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escExp); } };
+          document.addEventListener('keydown', escExp);
           setTimeout(() => overlay.querySelector('#edit-exp-name').focus(), 100);
         }
 
@@ -159,6 +162,7 @@
           if (!name) { showToast('⚠ Enter expense name'); return; }
           if (amount <= 0) { showToast('⚠ Enter valid amount'); return; }
           const createdAt = dateVal ? karachiDateToISO(dateVal) : getServerTime();
+            document.getElementById('exp-edit-overlay')?.remove();
           fbdb.ref('/expenses/' + key).update({ name, amount, createdAt }).then(() => {
             document.querySelector('div[style*="fixed"][style*="z-index:9999"]')?.remove();
             showToast('✓ Expense updated');
