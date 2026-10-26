@@ -287,7 +287,15 @@ function changeQty(i, delta) {
           }
 
           function clearBill() {
-            let _spendings = [];
+            if (bill.length === 0) return;
+            bill = [];
+            renderBill();
+            document.getElementById('cash-input').value = '';
+            calcChange();
+            showToast('Bill cleared');
+          }
+
+          let _spendings = [];
 if (typeof fbdb !== 'undefined') fbdb.ref('/spendings').on('value', snap => { const v = snap.val(); _spendings = v ? Object.values(v) : []; if (document.getElementById('sp-overlay')) spRender(); });
 function spendingsSince(startISO) { const st = new Date(startISO); return _spendings.filter(x => new Date(x.createdAt) > st); }
 function spEsc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -378,10 +386,7 @@ function openSpending() {
   }));
 }
 
-function clearBill() {
-          }
-
-          // _serverTimeOffset moved to top
+// _serverTimeOffset moved to top
 
           function syncServerTime() {
         fbdb.ref('.info/serverTimeOffset').on('value', snapshot => {
