@@ -49,6 +49,8 @@
             overlay.id = 'tc-overlay';
             overlay.style.cssText = 'position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9999;padding:12px';
             document.body.appendChild(overlay);
+            const escTc = e => { if (!overlay.isConnected) { document.removeEventListener('keydown', escTc); return; } if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escTc); } };
+            document.addEventListener('keydown', escTc);
 
             const boxStyle = 'background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:22px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px #0008';
             const inputStyle = 'width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-family:var(--mono);font-size:.9rem;padding:9px 6px;outline:none;text-align:right';
@@ -81,6 +83,9 @@
                 </div>`;
               overlay.querySelector('#tc-cancel').onclick = () => overlay.remove();
               overlay.querySelector('#tc-continue').onclick = onContinue;
+              const order = [overlay.querySelector('#tc-opening')].concat(TC_SLOTS.map(s => overlay.querySelector(`input[data-k="${s.key}"]`)));
+              order.forEach((el, i) => el.addEventListener('keydown', e => { if (e.key !== 'Enter') return; e.preventDefault(); if (i < order.length - 1) order[i + 1].focus(); else onContinue(); }));
+              setTimeout(() => order[0].focus(), 50);
             }
 
             function onContinue() {
@@ -100,12 +105,12 @@ const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFlo
                 sales[s.key] = tcRound(sales[s.key]);
                 // Cash: opening money is taken out first. Other methods are used as typed.
                 counted[s.key] = tcRound(parseFloat(vals.counted[s.key]) - (s.key === 'cash' ? opening : 0));
-                expected[s.key] = tcRound(sales[s.key] - (s.key === 'cash' ? spent : 0));
-                diff[s.key] = tcRound(counted[s.key] - expected[s.key]);
+                expected[s.key] = sales[s.key];
+                diff[s.key] = tcRound(counted[s.key] + (s.key === 'cash' ? spent : 0) - expected[s.key]);
                 totalSales += sales[s.key];
-                totalCounted += counted[s.key];
+                totalCounted += counted[s.key] + (s.key === 'cash' ? spent : 0);
               });
-              totalSales = tcRound(totalSales - spent);
+              totalSales = tcRound(totalSales);
               totalCounted = tcRound(totalCounted);
               const totalDiff = tcRound(totalCounted - totalSales);
               // Cash is NOT checked on its own (it is random) - only the total.
@@ -124,11 +129,18 @@ const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFlo
                 : r.totalDiff < 0 ? '⚠ Total is ' + tcMoney(-r.totalDiff) + ' LESS than the sales'
                 : '⚠ Total is ' + tcMoney(r.totalDiff) + ' MORE than the sales';
               const banner = `<div style="padding:12px 14px;border-radius:var(--radius2);${bStyle};font-weight:600;margin-bottom:16px">${okAll ? '✓ Everything matches the sales saved in the system' : totalMsg}${okAll ? '' : `<div style="font-weight:500;font-size:.82rem;margin-top:6px;line-height:1.6">${mismatches.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join('<br>')}</div>`}</div>`;
-              const rows = TC_SLOTS.map(s => `
+              const spendRow = r.spent > 0 ? `
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;align-items:center">
-                  <span>${s.icon} ${s.label}${s.key === 'cash' && r.spent > 0 ? `<div style="font-size:.68rem;color:var(--text3);margin-top:2px">${tcMoney(r.sales.cash)} sales − ${tcMoney(r.spent)} spending</div>` : ''}</span>
+                  <span>💸 Spending</span>
+                  <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.spent)}</span>
+                  <span style="font-family:var(--mono);text-align:right">${tcMoney(r.spent)}</span>
+                  <span style="text-align:right;font-weight:700;color:var(--accent)">✓ Recorded</span>
+                </div>` : '';
+              const rows = spendRow + TC_SLOTS.map(s => `
+                <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;align-items:center">
+                  <span>${s.icon} ${s.label}</span>
                   <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.expected[s.key])}</span>
-                  <span style="font-family:var(--mono);text-align:right">${tcMoney(r.counted[s.key])}</span>
+                  <span style="font-family:var(--mono);text-align:right">${tcMoney(r.counted[s.key])}${s.key === 'cash' && r.spent > 0 ? `<div style="font-size:.68rem;color:var(--text3)">+ ${tcMoney(r.spent)} spending</div>` : ''}</span>
                   <span style="text-align:right;font-weight:700;color:${tcDiffColor(r.diff[s.key])}">${s.key === 'cash' && r.spent > 0 && r.diff.cash === 0 ? '✓ Matched<div style="font-size:.68rem;font-weight:500">with spending</div>' : tcDiffText(r.diff[s.key])}</span>
                 </div>`).join('') + `
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:10px 0;font-size:.85rem;font-weight:700;align-items:center">
@@ -146,7 +158,7 @@ const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFlo
                     <span></span><span style="text-align:right">System says</span><span style="text-align:right">You typed</span><span style="text-align:right">Result</span>
                   </div>
                   ${rows}
-                <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}.${r.spent > 0 ? `<br>Spending today ${tcMoney(r.spent)} is already taken out of the Cash "System says".` : ''}</div>
+                  <div style="font-size:.72rem;color:var(--text3);margin-top:12px;line-height:1.5">Cash row = cash typed ${tcMoney(r.counted.cash + r.opening)} − opening ${tcMoney(r.opening)}${r.spent > 0 ? ` + spending ${tcMoney(r.spent)}` : ''} = ${tcMoney(r.counted.cash + r.spent)}.</div>
                   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px">
                     <button class="btn btn-ghost" id="tc-back">← Back</button>
                     <button class="btn btn-success" id="tc-done">Done</button>
