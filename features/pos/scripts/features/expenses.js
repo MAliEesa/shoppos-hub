@@ -59,12 +59,16 @@
             const dStr = `${viewedY}-${String(viewedM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             createdAt = karachiDateToISO(dStr);
           }
-          const expense = { key, name, amount, createdAt };
+          if (dateVal ? dateVal === todayStr() : expMonthOffset === 0) createdAt = getServerTime();
+          const hide = document.getElementById('exp-hide-spending').checked;
+          const expense = { key, name, amount, createdAt, ...(hide ? { hideFromSpending: true } : {}) };
+          if (!hide) fbdb.ref('/spendings/' + key).set({ key, name, amount, createdAt });
           fbdb.ref('/expenses/' + key).set(expense).then(() => {
             showToast('✓ Expense added: ' + name);
             document.getElementById('exp-name-input').value = '';
             document.getElementById('exp-amount-input').value = '';
             document.getElementById('exp-date-input').value = '';
+            document.getElementById('exp-hide-spending').checked = false;
           });
         }
 
@@ -145,26 +149,29 @@
               </div>
               <div style="display:flex;gap:10px;justify-content:flex-end">
                 <button class="btn btn-ghost" onclick="this.closest('div[style*=fixed]').remove()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmEditExpense('${key}')">💾 Save</button>
+                <button class="btn btn-primary" onclick="confirmEditExpense('${key}','${currentCreatedAt}')">💾 Save</button>
               </div>
             </div>`;
-            overlay.id = 'exp-edit-overlay';
+          document.querySelectorAll('.exp-edit-ov').forEach(x => x.remove());
+          overlay.className = 'exp-edit-ov';
+          overlay.id = 'exp-edit-overlay';
           document.body.appendChild(overlay);
-          const escExp = e => { if (!overlay.isConnected) { document.removeEventListener('keydown', escExp); return; } if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', escExp); } };
+          const escExp = e => { if (!document.querySelector('.exp-edit-ov')) { document.removeEventListener('keydown', escExp); return; } if (e.key === 'Escape') { document.querySelectorAll('.exp-edit-ov').forEach(x => x.remove()); document.removeEventListener('keydown', escExp); } };
           document.addEventListener('keydown', escExp);
           setTimeout(() => overlay.querySelector('#edit-exp-name').focus(), 100);
         }
 
-        function confirmEditExpense(key) {
+        function confirmEditExpense(key, origCreatedAt) {
           const name = document.getElementById('edit-exp-name').value.trim();
           const amount = parseFloat(document.getElementById('edit-exp-amount').value) || 0;
           const dateVal = document.getElementById('edit-exp-date').value;
           if (!name) { showToast('⚠ Enter expense name'); return; }
           if (amount <= 0) { showToast('⚠ Enter valid amount'); return; }
-          const createdAt = dateVal ? karachiDateToISO(dateVal) : getServerTime();
-            document.getElementById('exp-edit-overlay')?.remove();
+          const createdAt = (origCreatedAt && dateVal === localDate(origCreatedAt)) ? origCreatedAt : (dateVal ? karachiDateToISO(dateVal) : getServerTime());
+            document.querySelectorAll('.exp-edit-ov').forEach(x => x.remove());
+          fbdb.ref('/spendings/' + key).once('value').then(s => { if (s.exists()) fbdb.ref('/spendings/' + key).update({ name, amount, createdAt }); });
           fbdb.ref('/expenses/' + key).update({ name, amount, createdAt }).then(() => {
-            document.querySelector('div[style*="fixed"][style*="z-index:9999"]')?.remove();
+            document.querySelectorAll('.exp-edit-ov').forEach(x => x.remove());
             showToast('✓ Expense updated');
             renderExpenses();
           });
@@ -177,6 +184,7 @@
           const data = await res.json();
           if (!data.ok) { alert('❌ Wrong password!'); return; }
           if (!confirm('Delete this expense?')) return;
+          fbdb.ref('/spendings/' + key).remove();
           fbdb.ref('/expenses/' + key).remove().then(() => {
             showToast('🗑 Expense deleted');
             renderExpenses();
