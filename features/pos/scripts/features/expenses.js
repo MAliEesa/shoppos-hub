@@ -59,9 +59,10 @@
             const dStr = `${viewedY}-${String(viewedM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             createdAt = karachiDateToISO(dStr);
           }
-const expense = { key, name, amount, createdAt, ...(isToday ? { hideFromSpending: hide } : {}) };
+          const isToday = dateVal ? dateVal === todayStr() : expMonthOffset === 0;
+          if (isToday) createdAt = getServerTime();
           const hide = document.getElementById('exp-hide-spending').checked;
-          const expense = { key, name, amount, createdAt, ...(hide ? { hideFromSpending: true } : {}) };
+          const expense = { key, name, amount, createdAt, ...(isToday ? { hideFromSpending: hide } : {}) };
           if (isToday && !hide) fbdb.ref('/spendings/' + key).set({ key, name, amount, createdAt });
           fbdb.ref('/expenses/' + key).set(expense).then(() => {
             showToast('✓ Expense added: ' + name);
