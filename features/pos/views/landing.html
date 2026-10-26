@@ -5,6 +5,10 @@
               <button class="toggle-icon-btn" id="privacy-toggle-btn" onclick="togglePrivacyMode()" title="Privacy mode">🙈</button>
             </div>
             <div class="landing-time" id="clock"></div>
+            <select id="adm-role-select" onchange="setAdminRole(this.value)" title="Which admin login the Administration card uses" style="position:fixed;top:48px;right:24px;z-index:10;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-family:var(--mono);font-size:.75rem;padding:5px 8px;outline:none;cursor:pointer">
+              <option value="owner">Owner (full access)</option>
+              <option value="admin">Admin (limited)</option>
+            </select>
             <div class="landing-title">
               <h1>ShopOS</h1>
               <p>Point of Sale System</p>

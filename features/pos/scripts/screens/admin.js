@@ -10,6 +10,7 @@
           }
 
           function admTab(name, btn) {
+            if (adminShownRole === 'admin' && !ADMIN_LIMITED_TABS.includes(name)) return;
             document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.adm-nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + name).classList.add('active');

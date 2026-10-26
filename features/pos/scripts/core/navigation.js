@@ -1,7 +1,8 @@
           // ══════════════════════════════════════
           // NAVIGATION
           // ══════════════════════════════════════
-          let adminUnlocked = false;
+          let adminUnlockedAs = null; // null, 'admin' or 'owner'
+          let adminShownRole = null;
 
           function showPasswordPrompt(message) {
             return new Promise(resolve => {
@@ -43,19 +44,50 @@
             el.textContent = text || 'Checking...';
           }
 
-          function showAdminScreen() {
-            adminUnlocked = true;
+          const ADMIN_LIMITED_TABS = ['products', 'inventory', 'categories', 'barcodes'];
+          const ADMIN_ROLE_KEY = 'adminRolePref';
+
+          function getAdminRole() {
+            try { return localStorage.getItem(ADMIN_ROLE_KEY) === 'admin' ? 'admin' : 'owner'; } catch (e) { return 'owner'; }
+          }
+
+          function setAdminRole(role) {
+            try { localStorage.setItem(ADMIN_ROLE_KEY, role === 'admin' ? 'admin' : 'owner'); } catch (e) {}
+          }
+
+          function initAdminRoleSelect() {
+            const sel = document.getElementById('adm-role-select');
+            if (sel) sel.value = getAdminRole();
+          }
+
+          function applyAdminRole(role) {
+            document.querySelectorAll('.adm-nav-btn').forEach(btn => {
+              const m = (btn.getAttribute('onclick') || '').match(/admTab\('([^']+)'/);
+              const name = m ? m[1] : '';
+              btn.style.display = (role === 'admin' && !ADMIN_LIMITED_TABS.includes(name)) ? 'none' : '';
+            });
+          }
+
+          function showAdminScreen(role) {
+            const changed = adminShownRole !== role;
+            adminShownRole = role;
+            applyAdminRole(role);
             document.getElementById('landing').style.display = 'none';
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById('adm-screen').classList.add('active');
             initAdmScreen();
+            if (changed) {
+              const first = role === 'admin' ? 'products' : 'dashboard';
+              const btn = document.querySelector('.adm-nav-btn[onclick*="\'' + first + '\'"]');
+              if (btn) admTab(first, btn);
+            }
           }
 
-          async function callCheckpass(options) {
+          async function callAdminApi(name, options) {
             const ctrl = new AbortController();
             const timer = setTimeout(() => ctrl.abort(), 15000);
             try {
-              const r = await fetch(shopApi('checkpass'), { ...options, signal: ctrl.signal });
+              const r = await fetch(shopApi(name), { ...options, signal: ctrl.signal });
               return await r.json();
             } finally {
               clearTimeout(timer);
@@ -73,24 +105,30 @@
             if (adminOpening) return;
             adminOpening = true;
             try {
-              if (adminUnlocked) { showAdminScreen(); return; }
-              adminBusy(true, 'Checking this device...');
-              try {
-                const d0 = await callCheckpass({ cache: 'no-store' });
-                if (d0.ok) { showAdminScreen(); return; }
-              } catch (e) {}
-              adminBusy(false);
-              const entered = await showPasswordPrompt('🔒 Enter Admin Password:');
+              const role = getAdminRole();
+              if (adminUnlockedAs === 'owner' || (adminUnlockedAs === 'admin' && role === 'admin')) {
+                showAdminScreen(role);
+                return;
+              }
+              if (role === 'owner') {
+                adminBusy(true, 'Checking this device...');
+                try {
+                  const d0 = await callAdminApi('checkpass', { cache: 'no-store' });
+                  if (d0.ok) { adminUnlockedAs = 'owner'; showAdminScreen('owner'); return; }
+                } catch (e) {}
+                adminBusy(false);
+              }
+              const entered = await showPasswordPrompt('🔒 Enter ' + (role === 'owner' ? 'Owner' : 'Admin') + ' Password:');
               if (entered === null) return;
               adminBusy(true, 'Checking password...');
               try {
-                const data = await callCheckpass({
+                const data = await callAdminApi(role === 'owner' ? 'checkpass' : 'checklimited', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ password: entered })
                 });
                 adminBusy(false);
-                if (data.ok) showAdminScreen();
+                if (data.ok) { adminUnlockedAs = role; showAdminScreen(role); }
                 else alert('❌ Wrong password!');
               } catch (e) {
                 adminBusy(false);
@@ -101,6 +139,8 @@
               adminOpening = false;
             }
           }
+
+          initAdminRoleSelect();
           function goHome() {
             document.getElementById('landing').style.display = 'flex';
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
