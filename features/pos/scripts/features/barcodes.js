@@ -172,11 +172,36 @@ const c3 = label(500, 525);
               // 2-label roll tuning (dots, 8 dots = 1mm)
               const L2 = { leftDx: 4, leftDy: 52, rightDx: 72, rightDy: 52 };
               const label2 = (x, bx, dy) => (p) => `^FO${x},${10 + dy}^FB230,1,0,C,0^ADN,18,10^FD${p.ref}^FS^FO${bx},${32 + dy}^BCN,88,N,N,N^FD${p.barcode}^FS^FO${x},${128 + dy}^FB230,1,0,C,0^ADN,18,10^FD${p.customTrigger ? '---' : 'Rs. ' + Math.round(p.sellPrice)}^FS`;
+              // 2-label roll layout (dots, 8 dots = 1mm).
+              // Each block is 3.7 x 2.7 cm (296 x 216 dots); content stays 1mm inside it.
+              const L2X = {
+                leftCx: 166,    // horizontal centre of the LEFT block  (+8 = 1mm to the right)
+                rightCx: 502,   // horizontal centre of the RIGHT block (+8 = 1mm to the right)
+                leftDy: 0,      // LEFT block up/down  (+8 = 1mm down, -8 = 1mm up)
+                rightDy: 0,     // RIGHT block up/down (+8 = 1mm down, -8 = 1mm up)
+                top: 12,        // where the content starts inside the block
+                maxW: 288,      // widest the barcode may be (block width minus 1mm each side)
+                maxModule: 3,   // thickest bar width in dots
+                barH: 96        // barcode height in dots
+              };
+              const label2x = (cx, dy) => (p) => {
+                const data = String(p.barcode);
+                const modules = 35 + 11 * data.length;
+                const mw = Math.max(1, Math.min(L2X.maxModule, Math.floor(L2X.maxW / modules)));
+                const bw = modules * mw;
+                const bx = Math.round(cx - bw / 2);
+                const tx = Math.round(cx - 130);
+                const y = L2X.top + dy;
+                const price = p.customTrigger ? '---' : 'Rs. ' + Math.round(p.sellPrice);
+                return `^FO${tx},${y}^FB260,1,0,C,0^ADN,36,20^FD${p.ref}^FS` +
+                       `^BY${mw}^FO${bx},${y + 42}^BCN,${L2X.barH},N,N,N^FD${p.barcode}^FS^BY2` +
+                       `^FO${tx},${y + 42 + L2X.barH + 8}^FB260,1,0,C,0^ADN,36,20^FD${price}^FS`;
+              };
               // 1-label roll tuning: dx = move right, dy = move down
               const L1 = { dx: 72, dy: 40 };
               let cols;
               if (bcLabelSystem === 2) {
-                cols = [label2(5 + L2.leftDx, 30 + L2.leftDx, L2.leftDy), label2(245 + L2.rightDx, 270 + L2.rightDx, L2.rightDy)];
+                cols = [label2x(L2X.leftCx, L2X.leftDy), label2x(L2X.rightCx, L2X.rightDy)];
               } else {
                 cols = bcLabelSystem === 1
                   ? [label2(5 + L1.dx, 30 + L1.dx, L1.dy)]
