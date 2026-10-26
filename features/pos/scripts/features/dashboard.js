@@ -63,14 +63,14 @@
                 const itemsPreview = s.items.map(i=>i.name).join(', ').substring(0,40);
                 const itemsDetail = s.items.map(i => `
                   <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:.78rem">
-                    <span style="color:var(--text2)">${i.name}</span>
+                    <span style="color:var(--text2)">${i.name}${i.edited ? `<div style="font-size:.7rem;color:#f59e0b;font-family:var(--mono)">✎ Original Rs. ${i.origPrice} → Given Rs. ${i.price}</div>` : ''}</span>
                     <span style="font-family:var(--mono);color:var(--text3)">x${i.qty}</span>
                     <span style="font-family:var(--mono);color:var(--accent2)">${privacyMode ? 'Rs. ---' : 'Rs. ' + (i.qty * i.price).toFixed(0)}</span>
                   </div>`).join('');
                 return `<div class="recent-sale-row" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="this.querySelector('.sale-detail').style.display=this.querySelector('.sale-detail').style.display==='none'?'block':'none'">
                   <div style="display:flex;justify-content:space-between;align-items:center">
                     <div>
-                      <div class="rs-id">#${String(s.id).padStart(4,'0')} · ${s.items.length} item${s.items.length>1?'s':''} · ${s.payMethod||'Cash'}</div>
+                  <div class="rs-id">#${String(s.id).padStart(4,'0')} · ${s.items.length} item${s.items.length>1?'s':''} · ${s.payMethod||'Cash'}${s.items.some(i=>i.edited) ? ' <span style="background:#f59e0b25;color:#f59e0b;border:1px solid #f59e0b60;border-radius:4px;padding:1px 6px;font-size:.68rem;font-weight:700">✎ PRICE CHANGED</span>' : ''}</div>
                       <div style="font-size:.82rem">${itemsPreview}</div>
                     </div>
                     <div style="text-align:right;display:flex;align-items:center;gap:10px">

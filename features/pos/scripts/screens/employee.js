@@ -75,7 +75,8 @@
           }
 
           // Barcode input — works with barcode scanners (Enter key)
-          document.getElementById('barcode-input').addEventListener('keydown', function(e) {
+(function() { const el = document.getElementById('barcode-input'); let buf = '', last = 0, fast = 0; el.setAttribute('inputmode', 'none'); el.placeholder = 'Scan barcode...'; el.addEventListener('keydown', function(e) { if (e.ctrlKey || e.altKey || e.metaKey || e.key === 'Tab') return; if (e.key === 'Enter') { el.value = (buf.length >= 3 && fast >= buf.length - 1) ? buf : ''; buf = ''; fast = 0; return; } e.preventDefault(); if (e.key.length === 1) { const now = Date.now(); if (now - last > 80) { buf = ''; fast = 0; } else fast++; last = now; buf += e.key; } }); ['paste','drop','input'].forEach(ev => el.addEventListener(ev, function(e) { e.preventDefault(); el.value = ''; })); })();
+document.getElementById('barcode-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
               const val = this.value.trim();
               this.value = '';
@@ -106,14 +107,14 @@
 
             let totalQty = 0, totalAmt = 0;
             bill.forEach((b, i) => {
-              const rowTotal = b.qty * parseFloat(b.product.sellPrice);
+              const rowTotal = b.qty * billPrice(b);
               totalQty += b.qty;
               totalAmt += rowTotal;
               const tr = document.createElement('tr');
               tr.innerHTML = `
                 <td style="color:var(--text3);font-family:var(--mono);font-size:.78rem">${i+1}</td>
                 <td><div class="item-name">${b.product.name}</div><div class="item-price">${b.product.ref}</div></td>
-                <td class="item-price">Rs. ${parseFloat(b.product.sellPrice).toFixed(2)}</td>
+               <td class="item-price"><input type="number" min="0" step="any" inputmode="decimal" value="${billPrice(b)}" onchange="setBillPrice(${i},this.value)" onkeydown="if(event.key==='Enter')this.blur()" style="width:90px;background:var(--bg3);border:1px solid ${billPrice(b) !== parseFloat(b.product.sellPrice) ? '#f59e0b' : 'var(--border2)'};border-radius:6px;color:var(--text);font-family:var(--mono);font-size:.85rem;padding:5px 8px;outline:none">${billPrice(b) !== parseFloat(b.product.sellPrice) ? `<div style="font-size:.68rem;color:#f59e0b;margin-top:2px">was Rs. ${parseFloat(b.product.sellPrice).toFixed(2)}</div>` : ''}</td>
                 <td><div class="qty-ctrl">
                   <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
                   <span class="qty-num">${b.qty}</span>
@@ -129,7 +130,9 @@
             document.getElementById('total-amount').textContent = `Rs. ${totalAmt.toFixed(2)}`;
           }
 
-          function changeQty(i, delta) {
+function billPrice(b) { const p = parseFloat(b.price); return (b.price != null && !isNaN(p) && p >= 0) ? p : parseFloat(b.product.sellPrice); }
+function setBillPrice(i, val) { const v = parseFloat(val); if (bill[i] && !isNaN(v) && v >= 0) bill[i].price = v; renderBill(); calcChange(); if (window.innerWidth > 768) document.getElementById('barcode-input').focus(); }
+function changeQty(i, delta) {
             bill[i].qty += delta;
             if (bill[i].qty <= 0) bill.splice(i, 1);
             renderBill();
@@ -204,7 +207,7 @@
           }
           function calcChange() {
             const cash = parseFloat(document.getElementById('cash-input').value) || 0;
-            const total = bill.reduce((s, b) => s + b.qty * parseFloat(b.product.sellPrice), 0);
+            const total = bill.reduce((s, b) => s + b.qty * billPrice(b), 0);
             const el = document.getElementById('change-display');
             if (!el) return;
             if (cash === 0 || bill.length === 0) { el.textContent = '—'; el.style.color = 'var(--text3)'; return; }
@@ -343,7 +346,7 @@
             if (!_serverTimeSynced) { showToast('⏳ Still syncing time — try checkout again in a second'); return; }
 
             // Cash sales: the amount the customer paid must be entered, and must cover the total.
-            const _billTotal = bill.reduce((s, b) => s + b.qty * parseFloat(b.product.sellPrice), 0);
+            const _billTotal = bill.reduce((s, b) => s + b.qty * billPrice(b), 0);
             const _cashGiven = parseFloat(document.getElementById('cash-input').value) || 0;
             if (selectedPayMethod === 'Cash') {
               if (_cashGiven <= 0) { showToast('⚠ Enter the amount the customer paid'); document.getElementById('cash-input').focus(); return; }
@@ -356,11 +359,11 @@
 
             // Snapshot + clear the bill IMMEDIATELY, synchronously — before any await.
             // This is the fix: nothing can mutate `bill` in between anymore.
-            const billSnapshot = bill.map(b => ({ product: b.product, qty: b.qty }));
+            const billSnapshot = bill.map(b => ({ product: b.product, qty: b.qty, price: b.price }));
             document.getElementById('cash-input').value = '';
             calcChange();
-            const total = billSnapshot.reduce((s, b) => s + b.qty * parseFloat(b.product.sellPrice), 0);
-            const items = billSnapshot.map(b => ({ name: b.product.name, ref: b.product.ref, qty: b.qty, price: parseFloat(b.product.sellPrice) }));
+            const total = billSnapshot.reduce((s, b) => s + b.qty * billPrice(b), 0);
+            const items = billSnapshot.map(b => { const orig = parseFloat(b.product.sellPrice), given = billPrice(b); return { name: b.product.name, ref: b.product.ref, qty: b.qty, price: given, ...(given !== orig ? { origPrice: orig, edited: true } : {}) }; });
             bill = [];
             renderBill();
 
@@ -403,7 +406,7 @@
             let rows = '';
             let total = 0;
             bill.forEach(b => {
-              const line = b.qty * parseFloat(b.product.sellPrice);
+const line = b.qty * billPrice(b);
               total += line;
               const name = b.product.name.substring(0,18).padEnd(18);
               const qty = `x${b.qty}`.padStart(3);
