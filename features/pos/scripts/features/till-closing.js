@@ -41,6 +41,7 @@
 
           function openTillClosing() {
             if (document.getElementById('tc-overlay')) return;
+            if (typeof spListen === 'function') spListen();
                         const periodStart = karachiTimeToISO(todayStr(), '00:00');
             const vals = { opening: '', counted: {} };
 

@@ -296,7 +296,15 @@ function changeQty(i, delta) {
           }
 
           let _spendings = [];
-if (typeof fbdb !== 'undefined') fbdb.ref('/spendings').on('value', snap => { const v = snap.val(); _spendings = v ? Object.values(v) : []; if (document.getElementById('sp-overlay')) spRender(); });
+let _spA = {}, _spB = {}, _spStarted = false;
+function spMerge() { const m = {}; Object.values(_spB).forEach(x => { m[x.key] = x; }); Object.values(_spA).forEach(x => { m[x.key] = x; }); _spendings = Object.values(m); if (document.getElementById('sp-overlay')) spRender(); }
+function spListen() {
+  if (_spStarted || typeof fbdb === 'undefined') return;
+  _spStarted = true;
+  fbdb.ref('/spendings').on('value', snap => { _spA = snap.val() || {}; spMerge(); }, () => { _spStarted = false; });
+  fbdb.ref('/expenses').on('value', snap => { const v = snap.val() || {}; _spB = {}; Object.values(v).forEach(x => { if (x && x.fromSpending) _spB[x.key] = x; }); spMerge(); }, () => {});
+}
+spListen();
 function spendingsSince(startISO) { const st = new Date(startISO); return _spendings.filter(x => new Date(x.createdAt) > st); }
 function spEsc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -342,7 +350,8 @@ async function deleteSpending(key) {
 }
 
 function openSpending() {
-  if (document.getElementById('sp-overlay')) return;
+if (document.getElementById('sp-overlay')) return;
+  spListen();
   const inp = 'background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-size:.9rem;padding:9px 12px;outline:none';
   const overlay = document.createElement('div');
   overlay.id = 'sp-overlay';
@@ -358,7 +367,7 @@ function openSpending() {
       </div>
       <div style="display:flex;gap:8px;padding:14px 20px 4px;flex-wrap:wrap">
         <input id="sp-name" type="text" placeholder="Payment name (e.g. Home shopping)" style="${inp};flex:2;min-width:160px">
-        <input id="sp-amount" type="number" min="0" step="any" inputmode="decimal" placeholder="Price" style="${inp};flex:1;min-width:90px;text-align:right">
+        <input id="sp-amount" type="text" inputmode="decimal" placeholder="Price" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" style="${inp};flex:1;min-width:90px;text-align:right">
         <button class="btn btn-primary" id="sp-add">+ Add</button>
       </div>
       <div id="sp-list" style="overflow-y:auto;padding:4px 20px 20px"></div>
