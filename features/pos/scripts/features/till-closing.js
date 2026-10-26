@@ -126,10 +126,10 @@ const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFlo
               const banner = `<div style="padding:12px 14px;border-radius:var(--radius2);${bStyle};font-weight:600;margin-bottom:16px">${okAll ? '✓ Everything matches the sales saved in the system' : totalMsg}${okAll ? '' : `<div style="font-weight:500;font-size:.82rem;margin-top:6px;line-height:1.6">${mismatches.map(s => `${s.label}: ${tcDiffText(r.diff[s.key])}`).join('<br>')}</div>`}</div>`;
               const rows = TC_SLOTS.map(s => `
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;align-items:center">
-                  <span>${s.icon} ${s.label}</span>
+                  <span>${s.icon} ${s.label}${s.key === 'cash' && r.spent > 0 ? `<div style="font-size:.68rem;color:var(--text3);margin-top:2px">${tcMoney(r.sales.cash)} sales − ${tcMoney(r.spent)} spending</div>` : ''}</span>
                   <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.expected[s.key])}</span>
                   <span style="font-family:var(--mono);text-align:right">${tcMoney(r.counted[s.key])}</span>
-                  <span style="text-align:right;font-weight:700;color:${tcDiffColor(r.diff[s.key])}">${tcDiffText(r.diff[s.key])}</span>
+                  <span style="text-align:right;font-weight:700;color:${tcDiffColor(r.diff[s.key])}">${s.key === 'cash' && r.spent > 0 && r.diff.cash === 0 ? '✓ Matched<div style="font-size:.68rem;font-weight:500">with spending</div>' : tcDiffText(r.diff[s.key])}</span>
                 </div>`).join('') + `
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:10px 0;font-size:.85rem;font-weight:700;align-items:center">
                   <span>Total</span>
@@ -141,6 +141,7 @@ const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFlo
                 <div style="${boxStyle}">
                   <div style="font-family:var(--mono);font-size:1rem;color:var(--accent2);margin-bottom:14px">🔒 Closing — Result</div>
                   ${banner}
+                  ${r.spent > 0 ? `<div style="padding:10px 14px;border-radius:var(--radius2);background:#3b82f620;border:1px solid #3b82f640;color:var(--accent);font-size:.82rem;line-height:1.5;margin:-6px 0 16px">💸 Spending today: ${tcMoney(r.spent)}, taken out of Cash.${r.diff.cash === 0 ? ' Cash is ' + tcMoney(r.spent) + ' less than sales because of this spending, and it is fully covered ✓' : ''}</div>` : ''}
                   <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--border2);font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">
                     <span></span><span style="text-align:right">System says</span><span style="text-align:right">You typed</span><span style="text-align:right">Result</span>
                   </div>
