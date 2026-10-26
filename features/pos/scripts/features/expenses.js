@@ -59,10 +59,10 @@
             const dStr = `${viewedY}-${String(viewedM+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             createdAt = karachiDateToISO(dStr);
           }
-          if (dateVal ? dateVal === todayStr() : expMonthOffset === 0) createdAt = getServerTime();
+const expense = { key, name, amount, createdAt, ...(isToday ? { hideFromSpending: hide } : {}) };
           const hide = document.getElementById('exp-hide-spending').checked;
           const expense = { key, name, amount, createdAt, ...(hide ? { hideFromSpending: true } : {}) };
-          if (!hide) fbdb.ref('/spendings/' + key).set({ key, name, amount, createdAt });
+          if (isToday && !hide) fbdb.ref('/spendings/' + key).set({ key, name, amount, createdAt });
           fbdb.ref('/expenses/' + key).set(expense).then(() => {
             showToast('✓ Expense added: ' + name);
             document.getElementById('exp-name-input').value = '';
@@ -95,7 +95,7 @@
               return `<div class="exp-row" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:var(--radius2);border:1px solid var(--border)">
                 <div class="exp-row-info" style="flex:1;min-width:0">
                   <div style="font-size:.88rem;font-weight:500">${exp.name}</div>
-                  <div style="margin-top:3px;font-size:.72rem;color:var(--text3)">${dateLabel}</div>
+                  <div style="margin-top:3px;font-size:.72rem;color:var(--text3)">${dateLabel}${exp.fromSpending ? '<span style="margin-left:10px;color:var(--accent)">💸 From Spending</span>' : (exp.hideFromSpending === true ? '<span style="margin-left:10px;color:#f59e0b">🙈 Hidden from Spending</span>' : (exp.hideFromSpending === false ? '<span style="margin-left:10px;color:var(--accent2)">👁 Shown in Spending</span>' : ''))}</div>
                 </div>
                 <div class="exp-row-amt" style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--danger)">${privacyMode ? 'Rs. ---' : 'Rs. ' + parseFloat(exp.amount).toLocaleString()}</div>
                 <div class="exp-row-actions" style="display:flex;gap:8px">

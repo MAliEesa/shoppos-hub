@@ -48,7 +48,22 @@
                           <label class="form-label">Date</label>
                           <input class="form-input" type="date" id="exp-date-input">
                         </div>
-                        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.78rem;color:var(--text2);cursor:pointer;user-select:none"><input type="checkbox" id="exp-hide-spending" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">🙈 Hide from Spending</label>
+                        <style>
+.hs-switch{display:flex;align-items:center;gap:10px;height:42px;cursor:pointer;user-select:none}
+.hs-switch input{display:none}
+.hs-track{position:relative;width:44px;height:24px;border-radius:12px;background:var(--bg4);border:1px solid var(--border2);transition:.2s}
+.hs-track::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--text3);transition:.2s}
+.hs-switch input:checked + .hs-track{background:var(--accent);border-color:var(--accent)}
+.hs-switch input:checked + .hs-track::after{left:22px;background:#fff}
+.hs-text{font-size:.8rem;color:var(--text3);min-width:24px}
+.hs-text::before{content:'Off'}
+.hs-switch input:checked ~ .hs-text{color:var(--accent)}
+.hs-switch input:checked ~ .hs-text::before{content:'On'}
+</style>
+                        <div class="form-group" style="min-width:130px">
+                          <label class="form-label">Hide from Spending</label>
+                          <label class="hs-switch"><input type="checkbox" id="exp-hide-spending"><span class="hs-track"></span><span class="hs-text"></span></label>
+                        </div>
                         <button class="btn btn-primary" onclick="addExpense()" style="margin-bottom:1px">+ Add</button>
                       </div>
                       <div style="margin-top:10px;font-size:.75rem;color:var(--text3)">
