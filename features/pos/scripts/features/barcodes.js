@@ -176,7 +176,7 @@ const c3 = label(500, 525);
               // Each block is 3.7 x 2.7 cm (296 x 216 dots); content stays 1mm inside it.
               const L2X = {
                 leftCx: 166,    // horizontal centre of the LEFT block  (+8 = 1mm to the right)
-                rightCx: 502,   // horizontal centre of the RIGHT block (+8 = 1mm to the right)
+                rightCx: 490,   // horizontal centre of the RIGHT block (+8 = 1mm to the right)
                 leftDy: 0,      // LEFT block up/down  (+8 = 1mm down, -8 = 1mm up)
                 rightDy: 0,     // RIGHT block up/down (+8 = 1mm down, -8 = 1mm up)
                 top: 12,        // where the content starts inside the block
