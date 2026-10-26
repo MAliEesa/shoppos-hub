@@ -183,6 +183,11 @@
 
           initAdminRoleSelect();
           function goHome() {
+            if (typeof bill !== 'undefined' && bill.length) { bill = []; renderBill(); }
+            const _ci = document.getElementById('cash-input'); if (_ci) { _ci.value = ''; calcChange(); }
+            const _bi = document.getElementById('barcode-input'); if (_bi) _bi.value = '';
+            const _ro = document.getElementById('rec-overlay'); if (_ro) _ro.remove();
+            if (typeof selectPayMethod === 'function') selectPayMethod('Cash');
             document.getElementById('landing').style.display = 'flex';
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
           }
