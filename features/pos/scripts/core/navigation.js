@@ -140,6 +140,47 @@
             }
           }
 
+          async function changeAdminRole(sel) {
+            const wanted = sel.value === 'admin' ? 'admin' : 'owner';
+            const current = getAdminRole();
+            if (wanted === current) return;
+            if (adminOpening) { sel.value = current; return; }
+            adminOpening = true;
+            let allowed = false;
+            try {
+              adminBusy(true, 'Checking this device...');
+              try {
+                const d0 = await callAdminApi('checkpass', { cache: 'no-store' });
+                if (d0.ok) allowed = true;
+              } catch (e) {}
+              adminBusy(false);
+              if (!allowed) {
+                const entered = await showPasswordPrompt('🔒 Enter Owner Password to change this:');
+                if (entered !== null) {
+                  adminBusy(true, 'Checking password...');
+                  try {
+                    const data = await callAdminApi('checkpass', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ password: entered })
+                    });
+                    adminBusy(false);
+                    if (data.ok) allowed = true;
+                    else alert('❌ Wrong password!');
+                  } catch (e) {
+                    adminBusy(false);
+                    alert('Could not reach the server. Please try again.');
+                  }
+                }
+              }
+            } finally {
+              adminBusy(false);
+              adminOpening = false;
+            }
+            if (allowed) setAdminRole(wanted);
+            else sel.value = current;
+          }
+
           initAdminRoleSelect();
           function goHome() {
             document.getElementById('landing').style.display = 'flex';
