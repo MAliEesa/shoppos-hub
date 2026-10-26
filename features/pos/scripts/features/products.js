@@ -89,10 +89,14 @@
             renderEmpProducts();
           }
 
-          function deleteProduct() {
+          async function deleteProduct() {
             if (!editingProductRef) return;
             const p = db.products.find(x => x.ref === editingProductRef);
-            if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+            const pwd = await showPasswordPrompt(`🔑 Enter Wipe Password to delete "${p.name}":`);
+if (pwd === null) return;
+const res = await fetch(shopApi('checkwipe'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pwd }) });
+const data = await res.json();
+if (!data.ok) { alert('❌ Wrong password!'); return; }
             db.products = db.products.filter(x => x.ref !== editingProductRef);
             saveDB();
             editingProductRef = null;
