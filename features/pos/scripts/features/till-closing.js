@@ -133,7 +133,7 @@ const spent = tcRound(spendingsSince(periodStart).reduce((a, x) => a + (parseFlo
                 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.8rem;align-items:center">
                   <span>💸 Spending</span>
                   <span style="font-family:var(--mono);text-align:right;color:var(--text2)">${tcMoney(r.spent)}</span>
-                  <span style="font-family:var(--mono);text-align:right">${tcMoney(r.spent)}</span>
+                  <span style="font-family:var(--mono);text-align:right;color:var(--text3)">---</span>
                   <span style="text-align:right;font-weight:700;color:var(--accent)">✓ Recorded</span>
                 </div>` : '';
               const rows = spendRow + TC_SLOTS.map(s => `
