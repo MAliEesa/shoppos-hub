@@ -49,7 +49,7 @@
             const priceSearchEl = document.getElementById('emp-price-search');
             const priceSearchVal = priceSearchEl ? priceSearchEl.value.trim() : '';
             if (priceSearchVal !== '') {
-              filtered = filtered.filter(p => String(Math.round(parseFloat(p.sellPrice))) === String(Math.round(parseFloat(priceSearchVal))));
+              filtered = filtered.filter(p => [p.barcode, p.ref].some(v => String(v || '').toLowerCase().includes(priceSearchVal.toLowerCase())));
             }
 
             if (filtered.length === 0) {
@@ -62,7 +62,7 @@
               const imgHtml = p.photo
                 ? `<img src="${p.photo}" alt="${p.name}">`
                 : `<div class="prod-card-img-placeholder">📦</div>`;
-              card.innerHTML = `${imgHtml}<div class="prod-card-name">${p.name}</div><div class="prod-card-price">${p.customTrigger ? '---' : 'Rs. ' + parseFloat(p.sellPrice).toFixed(2)}</div>`;
+                card.innerHTML = `<div style="font-family:var(--mono);font-size:.68rem;color:var(--text3);margin-bottom:4px;word-break:break-all">${p.barcode || p.ref}</div>${imgHtml}<div class="prod-card-name">${p.name}</div><div class="prod-card-price">${p.customTrigger ? '---' : 'Rs. ' + parseFloat(p.sellPrice).toFixed(2)}</div>`;
               card.onclick = () => {
                 if (parseInt(p.stock||0) <= 0) { showToast('⚠ Out of stock — cannot add: ' + p.name); return; }
                 const inBill = bill.find(b => b.product.ref === p.ref);
